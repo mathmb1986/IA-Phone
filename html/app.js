@@ -1,11 +1,18 @@
-const phone   = document.getElementById('phone');
-const info    = document.getElementById('info');
-const btnClose= document.getElementById('btnClose');
-const appNotes= document.getElementById('appNotes');
-const view    = document.getElementById('view');
+const phone    = document.getElementById('phone');
+const info     = document.getElementById('info');
+const btnClose = document.getElementById('btnClose');
+const appNotes = document.getElementById('appNotes');
+const view     = document.getElementById('view');
 
 function show(open){ phone.classList.toggle('hidden', !open); }
-function nui(name, payload){ return fetch(`https://${GetParentResourceName()}/${name}`, {method:'POST', body: JSON.stringify(payload || {})}); }
+
+function nui(name, payload){
+  return fetch(`https://${GetParentResourceName()}/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify(payload || {})
+  });
+}
 
 window.addEventListener('message', (e) => {
   const d = e.data || {};
@@ -20,5 +27,9 @@ window.addEventListener('message', (e) => {
   }
 });
 
-btnClose.addEventListener('click', () => nui('nui:close', {}));
-nui('nui:ready', {});
+btnClose.addEventListener('click', () => nui('close', {}).catch(()=>{}));
+
+// Déclarer l'UI prête une fois le DOM prêt (same-origin fetch => OK CSP)
+document.addEventListener('DOMContentLoaded', () => {
+  nui('ready', { ts: Date.now() }).catch(()=>{});
+});
