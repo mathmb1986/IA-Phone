@@ -32,23 +32,22 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
         end
         local num = generateNumber()
         exports.oxmysql:execute(
-          'UPDATE ia_users SET phone_number = ? WHERE citizenid = ? AND (phone_number = ? OR phone_number = "")',
-          { num, citizenid, 'PENDING' },
-          function(affected)
-            if (affected or 0) > 0 then
-              -- OK, mais on valide l’unicité (au cas où conflit UNIQUE)
-              exports.oxmysql:scalar('SELECT COUNT(*) FROM ia_users WHERE phone_number = ?', { num }, function(cnt)
-                if cnt and cnt == 1 then
-                  cb(true); return
-                else
-                  assignUnique(attempt + 1)
-                end
-              end)
-            else
-              -- Déjà existant ou autre cas : juste ok
-              cb(true)
-            end
-          end
+        'UPDATE ia_users SET phone_number = ? WHERE citizenid = ? AND (phone_number = ? OR phone_number = "")',
+        { num, citizenid, 'PENDING' },
+        function(res)
+        if rowsAffected(res) > 0 then
+        -- OK, mais on valide l’unicité (au cas où conflit UNIQUE)
+        exports.oxmysql:scalar('SELECT COUNT(*) FROM ia_users WHERE phone_number = ?', { num }, function(cnt)
+        if tonumber(cnt) == 1 then
+          cb(true); return
+        else
+          assignUnique(attempt + 1)
+        end
+      end)
+    else
+      -- Déjà existant ou autre cas : juste ok
+      cb(true)
+    end          end
         )
       end
       assignUnique(1)
