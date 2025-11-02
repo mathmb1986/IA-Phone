@@ -1,5 +1,10 @@
+-- Client
+
 local gotUser = false
 local userRetryTimer = nil
+local ESX = nil
+local phoneBooted = false
+local playerX = nil   
 
 local function debug(msg)
   if Config.Debug then print(("[IA-Phone] %s"):format(msg)) end
@@ -11,34 +16,35 @@ end, false)
 
 RegisterKeyMapping('iap_toggle_phone', 'IA-Phone: Ouvrir/Fermer', 'keyboard', Config.DefaultOpenKey or 'F1')
 
+--  Rajouter dans le meme principe un registre pour les Framework dif 
+RegisterNetEvent('esx:playerLoaded', function (xPlayer, skin)
+    -- print("The character " .. xPlayer.name .. " successfully loaded")
+    playerX = xPlayer
+end)
+
 -- Au boot client, demande le profil au serveur (numéro, etc.)
 CreateThread(function()
+
+  while playerX == nil do
+    Citizen.Wait(50)   -- attends 500 ms entre chaque tentative (évite le spam)
+  end
+
   local pdata = Bridge.GetPlayerData()
-  debug(("Client prêt, Framework=%s"):format(Bridge.name))
+  debug(("Client Ready, Framework=%s"):format(Bridge.name))
   SendNUIMessage({ action = 'boot', player = { id = pdata.source, job = pdata.job and pdata.job.name } })
 
-  -- 1ère demande
-  TriggerServerEvent('ia-phone:request-user')
-
-  -- Retry en 2000 ms si aucune réponse
-  if userRetryTimer then
-    -- sécurité si relancé
-    if ClearTimeout then ClearTimeout(userRetryTimer) end
-    userRetryTimer = nil
+  -- Boucle de retry côté client, sans timers
+  local attempts = 0
+  while not gotUser and attempts < 10 do
+    TriggerServerEvent('ia-phone:request-user')
+    Citizen.Wait(500)   -- attends 500 ms entre chaque tentative (évite le spam)
+    attempts = attempts + 1
   end
 
-  local timeoutFn = function()
-    if not gotUser then
-      TriggerServerEvent('ia-phone:request-user')
-    end
+  if not gotUser then
+    debug("Aucune réponse user après 10 tentatives — l'UI restera en 'Chargement…'")
   end
 
-  if SetTimeout then
-    userRetryTimer = SetTimeout(2000, timeoutFn)
-  else
-    -- fallback FiveM
-    userRetryTimer = Citizen.SetTimeout(2000, timeoutFn)
-  end
 end)
 
 RegisterNetEvent('ia-phone:set-user', function(user)

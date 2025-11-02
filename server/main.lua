@@ -1,3 +1,5 @@
+-- Server
+
 local function debug(msg)
   if Config.Debug then print(("[IA-Phone][SV] %s"):format(msg)) end
 end
