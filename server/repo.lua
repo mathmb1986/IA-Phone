@@ -4,12 +4,21 @@ local function debug(msg)
   if Config.Debug then print(("[IA-Phone][SV][Repo] %s"):format(msg)) end
 end
 
+-- <= PLACE ICI
+local function rowsAffected(res)
+  if type(res) == "number" then
+    return res
+  elseif type(res) == "table" then
+    return res.affectedRows or res.changedRows or res.affected or 0
+  end
+  return 0
+end
+-- <= FIN
+
 local function generateNumber()
-  -- Format simple 555-XXXX ; adapte si tu veux autre chose
   return ("555-%04d"):format(math.random(0, 9999))
 end
 
--- Retourne table user {citizenid,name,phone_number,avatar,wallpaper,...} ou nil
 function Repo.GetUser(citizenid, cb)
   exports.oxmysql:single('SELECT * FROM ia_users WHERE citizenid = ?', { citizenid }, function(row)
     cb(row or nil)
