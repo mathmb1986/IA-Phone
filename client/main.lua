@@ -17,16 +17,27 @@ CreateThread(function()
   debug(("Client prêt, Framework=%s"):format(Bridge.name))
   SendNUIMessage({ action = 'boot', player = { id = pdata.source, job = pdata.job and pdata.job.name } })
 
-  -- Boucle de retry côté client, sans timers
-  local attempts = 0
-  while not gotUser and attempts < 10 do
-    TriggerServerEvent('ia-phone:request-user')
-    Citizen.Wait(500)   -- attends 500 ms entre chaque tentative (évite le spam)
-    attempts = attempts + 1
+  -- 1ère demande
+  TriggerServerEvent('ia-phone:request-user')
+
+  -- Retry en 2000 ms si aucune réponse
+  if userRetryTimer then
+    -- sécurité si relancé
+    if ClearTimeout then ClearTimeout(userRetryTimer) end
+    userRetryTimer = nil
   end
 
-  if not gotUser then
-    debug("Aucune réponse user après 10 tentatives — l'UI restera en 'Chargement…'")
+  local timeoutFn = function()
+    if not gotUser then
+      TriggerServerEvent('ia-phone:request-user')
+    end
+  end
+
+  if SetTimeout then
+    userRetryTimer = SetTimeout(2000, timeoutFn)
+  else
+    -- fallback FiveM
+    userRetryTimer = Citizen.SetTimeout(2000, timeoutFn)
   end
 end)
 
