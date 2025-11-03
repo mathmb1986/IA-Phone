@@ -22,12 +22,10 @@ RegisterNetEvent('esx:playerLoaded', function (xPlayer, skin)
     playerX = xPlayer
 end)
 
+
+-- Boucle de demarage pas important coté performance pour le moment.
 -- Au boot client, demande le profil au serveur (numéro, etc.)
 CreateThread(function()
-
-  while playerX == nil do
-    Citizen.Wait(50)   -- attends 500 ms entre chaque tentative (évite le spam)
-  end
 
   local pdata = Bridge.GetPlayerData()
   debug(("Client Ready, Framework=%s"):format(Bridge.name))
