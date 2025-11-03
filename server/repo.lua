@@ -4,7 +4,6 @@ local function debug(msg)
   if Config.Debug then print(("[IA-Phone][SV][Repo] %s"):format(msg)) end
 end
 
--- <= PLACE ICI
 local function rowsAffected(res)
   if type(res) == "number" then
     return res
@@ -13,14 +12,16 @@ local function rowsAffected(res)
   end
   return 0
 end
--- <= FIN
 
 local function generateNumber()
-  return ("555-%04d"):format(math.random(0, 9999))
+  local prefix = math.random(100, 777)     -- 3 chiffres aléatoires entre 100 et 999
+  local suffix = math.random(0, 9999)      -- 4 chiffres aléatoires entre 0000 et 9999
+  return ("%03d-%04d"):format(prefix, suffix)
 end
 
+
 function Repo.GetUser(citizenid, cb)
-  exports.oxmysql:single('SELECT * FROM ia_users WHERE citizenid = ?', { citizenid }, function(row)
+  exports.oxmysql:single('SELECT * FROM iaPhone_users WHERE citizenid = ?', { citizenid }, function(row)
     cb(row or nil)
   end)
 end
@@ -29,7 +30,7 @@ end
 function Repo.EnsureUser(citizenid, defaultName, cb)
   -- Upsert basique: essaie d’insérer le citizen si absent
   exports.oxmysql:execute(
-    'INSERT IGNORE INTO ia_users (citizenid, name, phone_number) VALUES (?, ?, ?)',
+    'INSERT IGNORE INTO iaPhone_users (citizenid, name, phone_number) VALUES (?, ?, ?)',
     { citizenid, defaultName or '', 'PENDING' },
     function()
       -- Si phone_number == 'PENDING' -> générer un unique
@@ -41,12 +42,12 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
         end
         local num = generateNumber()
         exports.oxmysql:execute(
-        'UPDATE ia_users SET phone_number = ? WHERE citizenid = ? AND (phone_number = ? OR phone_number = "")',
+        'UPDATE iaPhone_users SET phone_number = ? WHERE citizenid = ? AND (phone_number = ? OR phone_number = "")',
         { num, citizenid, 'PENDING' },
         function(res)
         if rowsAffected(res) > 0 then
         -- OK, mais on valide l’unicité (au cas où conflit UNIQUE)
-        exports.oxmysql:scalar('SELECT COUNT(*) FROM ia_users WHERE phone_number = ?', { num }, function(cnt)
+        exports.oxmysql:scalar('SELECT COUNT(*) FROM iaPhone_users WHERE phone_number = ?', { num }, function(cnt)
         if tonumber(cnt) == 1 then
           cb(true); return
         else
