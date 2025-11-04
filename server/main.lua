@@ -1,9 +1,12 @@
 -- Server
 
+-- Debug Print 
 local function debug(msg)
   if Config.Debug then print(("[IA-Phone][SV] %s"):format(msg)) end
 end
 
+
+-- Ne sert pas vraiment pour l'instant
 -- Assure le user quand il joint
 AddEventHandler('playerJoining', function()
   local src = source
@@ -16,11 +19,14 @@ end)
 
 
 -- Client demande son profil (nom/numéro, etc.) — version "par nom"
-RegisterNetEvent('ia-phone:request-user', function()
+RegisterNetEvent('ia-phone:request-user',function(name)
   local src = source
   local id  = SvBridge.GetIdentifier(src)          -- citizenid (clé unique)
-  local name = GetPlayerName(src) or ''            -- nom affiché / RP (remplace si tu as mieux)
 
+  --local name = GetPlayerName(src) or ''            -- nom affiché / RP (remplace si tu as mieux)
+  --print(("[IA-Phone][SV] Test : %s"):format(test))
+  --print(("[IA-Phone][SV] Try load : %s"):format(name))
+	
   Repo.GetUserByNameForCitizen(id,name, function(user)                -- lecture PAR NOM
     if not user then
       debug(("User introuvable pour le nom '%s', EnsureUser avec citizenid=%s"):format(name, id))

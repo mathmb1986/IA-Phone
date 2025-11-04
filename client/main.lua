@@ -16,13 +16,6 @@ end, false)
 
 RegisterKeyMapping('iap_toggle_phone', 'IA-Phone: Ouvrir/Fermer', 'keyboard', Config.DefaultOpenKey or 'F1')
 
---  Rajouter dans le meme principe un registre pour les Framework dif 
-RegisterNetEvent('esx:playerLoaded', function (xPlayer, skin)
-    -- print("The character " .. xPlayer.name .. " successfully loaded")
-    playerX = xPlayer
-end)
-
-
 -- Boucle de demarage pas important coté performance pour le moment.
 -- Au boot client, demande le profil au serveur (numéro, etc.)
 CreateThread(function()
@@ -34,7 +27,7 @@ CreateThread(function()
   -- Boucle de retry côté client, sans timers
   local attempts = 0
   while not gotUser and attempts < 10 do
-    TriggerServerEvent('ia-phone:request-user')
+    TriggerServerEvent('ia-phone:request-user',Bridge.playerName)
     Citizen.Wait(500)   -- attends 500 ms entre chaque tentative (évite le spam)
     attempts = attempts + 1
   end
@@ -45,6 +38,8 @@ CreateThread(function()
 
 end)
 
+
+-- Reponse du server donne les info telephone.
 RegisterNetEvent('ia-phone:set-user', function(user)
   gotUser = true
   if userRetryTimer then

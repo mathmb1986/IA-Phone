@@ -1,8 +1,15 @@
-Bridge = { name = "standalone" }
+Bridge = { name = "standalone",playerName = "notset" }
 
-local function debug(msg)
-  if Config.Debug then print(("[IA-Phone] %s"):format(msg)) end
+
+-- ## ESX BRIDGE
+-- Méthode pour obtenir le nom et prénom du joueur compatible avec ESX
+local function getPlayerFullName(playerData)
+  if playerData and playerData.firstName and playerData.lastName then
+    return ("%s %s"):format(playerData.firstName, playerData.lastName)
+  end
+  return "Inconnu"
 end
+
 
 CreateThread(function()
     local player = nil
@@ -15,6 +22,7 @@ CreateThread(function()
             local attempts = 0
             while (not player or not player.job) do
                 player = ESX.GetPlayerData()
+		        Bridge.playerName = getPlayerFullName(player)
                 Citizen.Wait(100) -- attend 100ms entre chaque tentative
             end
 
@@ -45,5 +53,10 @@ CreateThread(function()
         end
     end
 
-    debug(("[IA-Phone] Client Framework détecté : %s"):format(Bridge.name))
 end)
+
+
+-- Debug Print
+local function debug(msg)
+  if Config.Debug then print(("[IA-Phone] %s"):format(msg)) end
+end
