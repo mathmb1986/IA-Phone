@@ -20,46 +20,80 @@ local function generateNumber()
 end
 
 
-function Repo.GetUser(citizenid, cb)
-  exports.oxmysql:single('SELECT * FROM iaPhone_users WHERE citizenid = ?', { citizenid }, function(row)
-    cb(row or nil)
+-- [RECO] Trouve l’entrée du perso exact: (citizenid + name)
+function Repo.GetUserByNameForCitizen(citizenid, userName, cb)
+  exports.oxmysql:single(
+    'SELECT * FROM iaPhone_users WHERE citizenid = ? AND name = ? LIMIT 1',
+    { citizenid, userName },
+    function(row) cb(row or nil) end
+  )
+end
+
+-- Fallback: prend le "premier" John (si doublons possibles)
+function Repo.GetFirstUserByName(userName, cb)
+  exports.oxmysql:single(
+    'SELECT * FROM iaPhone_users WHERE name = ? ORDER BY updated_at DESC, id ASC LIMIT 1',
+    { userName },
+    function(row) cb(row or nil) end
+  )
+end
+
+-- Si tu veux juste le numéro (pour “le phone à John”)
+function Repo.GetPhoneNumberByNameForCitizen(citizenid, userName, cb)
+  Repo.GetUserByNameForCitizen(citizenid, userName, function(row)
+    cb(row and row.phone_number or nil)
   end)
 end
 
--- Crée un user s’il n’existe pas + assigne un numéro unique
+
+-- Crée le user (si absent) + assigne un numéro unique à CE citizenid seulement
 function Repo.EnsureUser(citizenid, defaultName, cb)
-  -- Upsert basique: essaie d’insérer le citizen si absent
+  if not citizenid then return cb(false) end
+
   exports.oxmysql:execute(
     'INSERT IGNORE INTO iaPhone_users (citizenid, name, phone_number) VALUES (?, ?, ?)',
     { citizenid, defaultName or '', 'PENDING' },
     function()
-      -- Si phone_number == 'PENDING' -> générer un unique
       local function assignUnique(attempt)
         attempt = attempt or 1
         if attempt > 8 then
           debug(("Échec assignUnique après 8 tentatives pour %s"):format(citizenid))
           return cb(false)
         end
+
         local num = generateNumber()
+
+        -- CIBLE UN SEUL USER: citizenid
         exports.oxmysql:execute(
-        'UPDATE iaPhone_users SET phone_number = ? WHERE citizenid = ? AND (phone_number = ? OR phone_number = "")',
-        { num, citizenid, 'PENDING' },
-        function(res)
-        if rowsAffected(res) > 0 then
-        -- OK, mais on valide l’unicité (au cas où conflit UNIQUE)
-        exports.oxmysql:scalar('SELECT COUNT(*) FROM iaPhone_users WHERE phone_number = ?', { num }, function(cnt)
-        if tonumber(cnt) == 1 then
-          cb(true); return
-        else
-          assignUnique(attempt + 1)
-        end
-      end)
-    else
-      -- Déjà existant ou autre cas : juste ok
-      cb(true)
-    end          end
+          [[
+            UPDATE iaPhone_users
+            SET phone_number = ?
+            WHERE citizenid = ? AND (phone_number = 'PENDING' OR phone_number = '')
+            LIMIT 1
+          ]],
+          { num, citizenid },
+          function(res)
+            if rowsAffected(res) > 0 then
+              -- Valide unicité
+              exports.oxmysql:scalar(
+                'SELECT COUNT(*) FROM iaPhone_users WHERE phone_number = ?',
+                { num },
+                function(cnt)
+                  if tonumber(cnt) == 1 then
+                    cb(true)
+                  else
+                    assignUnique(attempt + 1)
+                  end
+                end
+              )
+            else
+              -- Déjà existant (il a déjà un numéro) -> OK
+              cb(true)
+            end
+          end
         )
       end
+
       assignUnique(1)
     end
   )
