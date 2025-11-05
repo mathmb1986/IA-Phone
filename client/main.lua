@@ -1,20 +1,41 @@
 -- Client
 
+-- Framework
+local ESX = nil
+
+
 local gotUser = false
 local userRetryTimer = nil
-local ESX = nil
-local phoneBooted = false
-local playerX = nil   
+local phoneBooted = false 
 
 local function debug(msg)
   if Config.Debug then print(("[IA-Phone] %s"):format(msg)) end
 end
 
+-- RegisterKey Function
+RegisterKeyMapping('iap_toggle_phone', 'IA-Phone: Ouvrir/Fermer', 'keyboard', Config.DefaultOpenKey)-- or 'F1'
+
+-- Reponse du server donne les info telephone.
+RegisterNetEvent('ia-phone:set-user', function(user)
+  gotUser = true
+  if userRetryTimer then
+    if ClearTimeout then ClearTimeout(userRetryTimer) end
+    userRetryTimer = nil
+  end
+  SendNUIMessage({ action = 'set-user', user = user or {} })
+end)
+
+-- Commande pour ouvrir/fermer le telephone
 RegisterCommand('iap_toggle_phone', function()
   PhoneNui.Toggle()
 end, false)
 
-RegisterKeyMapping('iap_toggle_phone', 'IA-Phone: Ouvrir/Fermer', 'keyboard', Config.DefaultOpenKey or 'F1')
+-- Force la fermeture du telephone (utilisé par d'autres scripts si besoin) 
+RegisterNetEvent('ia-phone:force-close', function()
+  if PhoneNui.IsOpen() then PhoneNui.Toggle() end
+end)
+
+
 
 -- Boucle de demarage pas important coté performance pour le moment.
 -- Au boot client, demande le profil au serveur (numéro, etc.)
@@ -38,19 +59,5 @@ CreateThread(function()
 
 end)
 
-
--- Reponse du server donne les info telephone.
-RegisterNetEvent('ia-phone:set-user', function(user)
-  gotUser = true
-  if userRetryTimer then
-    if ClearTimeout then ClearTimeout(userRetryTimer) end
-    userRetryTimer = nil
-  end
-  SendNUIMessage({ action = 'set-user', user = user or {} })
-end)
-
-RegisterNetEvent('ia-phone:force-close', function()
-  if PhoneNui.IsOpen() then PhoneNui.Toggle() end
-end)
 
 

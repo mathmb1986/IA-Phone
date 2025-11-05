@@ -3,14 +3,14 @@ game 'gta5'
 
 name 'IA-Phone'
 author 'mathmb1986'
-version '0.1.0'
+version '0.1.1'
 
 ui_page 'html/index.html'
 
 files { 
 	'html/index.html',
- 	'html/app.js', 
-	'html/app.css' 
+ 	'html/js/*.js', 
+	'html/css/*.css' 
 }
 
 shared_scripts { 'config.lua' }
@@ -18,7 +18,9 @@ shared_scripts { 'config.lua' }
 client_scripts {
   'client/bridge.lua',
   'client/nui.lua',
-  'client/main.lua'
+  'client/main.lua',  
+  'client/locale.lua',
+  'locales/*.lua'
 }
 
 server_scripts {

@@ -38,6 +38,12 @@ CreateThread(function()
         Bridge.name = "QBCore"
         local QBCore = exports['qb-core'] and exports['qb-core']:GetCoreObject()
 
+        local p   = QBCore.Functions.GetPlayer(src)
+        local ci  = p and p.PlayerData and p.PlayerData.charinfo
+        local display = (ci and ci.firstname and ci.lastname) and (ci.firstname .. ' ' .. ci.lastname) or GetPlayerName(src)
+        local uid     = p and p.PlayerData and p.PlayerData.citizenid
+
+
         Bridge.GetPlayerData = function()
             if not QBCore then
                 print("[IA-Phone] ?? QBCore non trouvé.")
