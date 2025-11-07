@@ -9,8 +9,11 @@ ui_page 'html/index.html'
 
 files { 
 	'html/index.html',
- 	'html/js/*.js', 
-	'html/css/*.css' 
+ 	'html/img/*.svg',
+  	'html/js/*.js', 
+	'html/css/*.css',
+    'html/scripts/*.js',
+    'html/scripts/mustache.min.js',	
 }
 
 shared_scripts { 'config.lua' }
