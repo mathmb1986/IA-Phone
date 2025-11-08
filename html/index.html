@@ -28,6 +28,7 @@
       </div>
 
       <div class="content">
+        <!-- ÉCRAN D’ACCUEIL -->
         <div class="homescreen" id="homescreen" role="region" aria-label="Écran d’accueil">
           <div class="clock">
             <div id="hsTime" class="time">12:45</div>
@@ -35,6 +36,7 @@
           </div>
 
           <div class="apps" id="appsGrid" role="list" aria-label="Applications">
+            <!-- Appels -->
             <button class="app" role="listitem" data-app="calls" aria-label="Appels" title="Appels">
               <span class="app-icon green">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -44,6 +46,7 @@
               <span class="app-label">Appels</span>
             </button>
 
+            <!-- Messages -->
             <button class="app" role="listitem" data-app="messages" aria-label="Messages" title="Messages">
               <span class="app-icon blue">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -53,6 +56,7 @@
               <span class="app-label">Messages</span>
             </button>
 
+            <!-- Contacts -->
             <button class="app" role="listitem" data-app="contacts" aria-label="Contacts" title="Contacts">
               <span class="app-icon orange">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -62,6 +66,7 @@
               <span class="app-label">Contacts</span>
             </button>
 
+            <!-- Réglages -->
             <button class="app" role="listitem" data-app="settings" aria-label="Réglages" title="Réglages">
               <span class="app-icon gray">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -73,7 +78,44 @@
           </div>
         </div>
 
-        <!-- Panneau debug (toggle F4) -->
+        <!-- APP MESSAGES -->
+        <div class="screen-messages" id="screenMessages" role="region" aria-label="Messages" hidden>
+          <div class="msg-header">
+            <button id="btnBackHome" class="msg-back" aria-label="Retour à l’accueil">←</button>
+            <div class="msg-header-text">
+              <div class="msg-title">Messages</div>
+              <div id="msgSubtitle" class="msg-subtitle">0 conversation</div>
+            </div>
+          </div>
+
+          <div class="msg-body">
+            <!-- Liste des conversations -->
+            <div class="msg-threads" id="msgThreads"></div>
+
+            <!-- Fil de discussion -->
+            <div class="msg-thread" id="msgThread" hidden>
+              <div class="msg-thread-header">
+                <div class="msg-thread-avatar" id="threadAvatar">?</div>
+                <div class="msg-thread-meta">
+                  <div id="threadName" class="msg-thread-name">Contact</div>
+                  <div id="threadStatus" class="msg-thread-status">En ligne</div>
+                </div>
+              </div>
+              <div class="msg-thread-messages" id="msgThreadMessages"></div>
+              <form class="msg-input" id="msgForm" autocomplete="off">
+                <input id="msgInput" type="text" name="message" placeholder="Envoyer un message…" />
+                <button type="submit" aria-label="Envoyer">➤</button>
+              </form>
+            </div>
+
+            <!-- Message vide -->
+            <div class="msg-empty" id="msgEmpty">
+              Sélectionne une conversation pour voir les messages.
+            </div>
+          </div>
+        </div>
+
+        <!-- Panneau DEBUG (toggle F4) -->
         <div id="debugPanel" class="debug"></div>
 
         <p id="info" class="muted sr-only">Chargement…</p>

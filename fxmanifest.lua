@@ -3,7 +3,7 @@ game 'gta5'
 
 name 'IA-Phone'
 author 'mathmb1986'
-version '0.1.1'
+version '0.1.2'
 
 ui_page 'html/index.html'
 
@@ -12,8 +12,6 @@ files {
  	'html/img/*.svg',
   	'html/js/*.js', 
 	'html/css/*.css',
-    'html/scripts/*.js',
-    'html/scripts/mustache.min.js',	
 }
 
 shared_scripts { 'config.lua' }
