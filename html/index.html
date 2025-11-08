@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="css/app.css" />
 </head>
 <body>
-  <!-- NOTE: plus de .hidden: les animations utilisent opacity/visibility/pointer-events -->
   <div id="phone" class="phone" aria-hidden="true">
     <div class="bezel">
       <div class="notch">
@@ -36,7 +35,6 @@
           </div>
 
           <div class="apps" id="appsGrid" role="list" aria-label="Applications">
-            <!-- Appels -->
             <button class="app" role="listitem" data-app="calls" aria-label="Appels" title="Appels">
               <span class="app-icon green">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -46,7 +44,6 @@
               <span class="app-label">Appels</span>
             </button>
 
-            <!-- Messages -->
             <button class="app" role="listitem" data-app="messages" aria-label="Messages" title="Messages">
               <span class="app-icon blue">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -56,7 +53,6 @@
               <span class="app-label">Messages</span>
             </button>
 
-            <!-- Contacts -->
             <button class="app" role="listitem" data-app="contacts" aria-label="Contacts" title="Contacts">
               <span class="app-icon orange">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -66,7 +62,6 @@
               <span class="app-label">Contacts</span>
             </button>
 
-            <!-- Réglages -->
             <button class="app" role="listitem" data-app="settings" aria-label="Réglages" title="Réglages">
               <span class="app-icon gray">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -77,6 +72,9 @@
             </button>
           </div>
         </div>
+
+        <!-- Panneau debug (toggle F4) -->
+        <div id="debugPanel" class="debug"></div>
 
         <p id="info" class="muted sr-only">Chargement…</p>
       </div>

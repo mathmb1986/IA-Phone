@@ -1,152 +1,108 @@
-/* ==== RESET & BASE ==== */
-*,
-*::before,
-*::after { box-sizing: border-box; }
-
-html,body{
-  margin:0;padding:0;background:transparent;color:#eee;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
-}
-
-/* Accessibilité: cacher visuellement mais lisible SR */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-/* ==== TÉLÉPHONE (ANIMATIONS FADE/SLIDE) ==== */
+/* Phone fade/slide */
 .phone{
-  position:absolute;right:3%;bottom:6%;
-  width:340px;height:680px;
-  display:flex;place-items:stretch;
+  position:absolute;right:3%;bottom:6%;width:340px;height:680px;display:flex;place-items:stretch;
+  opacity:0;transform:translateY(12px) scale(.985);visibility:hidden;pointer-events:none;
+  transition:opacity .18s ease,transform .22s cubic-bezier(.2,.6,.2,1),visibility 0s linear .22s
+}
+.phone.is-open{opacity:1;transform:translateY(0) scale(1);visibility:visible;pointer-events:auto;transition:opacity .18s ease,transform .22s cubic-bezier(.2,.6,.2,1),visibility 0s}
+.phone.is-closing{opacity:0;transform:translateY(8px) scale(.985);pointer-events:none}
+@media (prefers-reduced-motion: reduce){.phone{transition:none !important;transform:none !important}}
 
-  /* état fermé par défaut */
-  opacity:0;
-  transform: translateY(12px) scale(.985);
-  visibility:hidden;
-  pointer-events:none;
+.bezel{position:relative;flex:1;overflow:hidden;border-radius:32px;background:#0e0f12;color:#eee;border:1px solid #23252b;box-shadow:0 18px 60px rgba(0,0,0,.55), inset 0 0 0 6px #0a0b0d}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:140px;height:26px;border-radius:14px 14px 20px 20px;background:#0a0b0d;z-index:5;display:flex;align-items:center;justify-content:center;gap:10px}
+.notch .cam{width:10px;height:10px;border-radius:50%;background:#0a0a0a;box-shadow:0 0 0 2px #101217, inset 0 0 4px rgba(0,0,0,.8)}
+.notch .speaker{width:54px;height:6px;border-radius:4px;background:#151821;box-shadow:inset 0 0 2px rgba(255,255,255,.08)}
 
-  /* transition douce */
-  transition:
-    opacity .18s ease,
-    transform .22s cubic-bezier(.2,.6,.2,1),
-    visibility 0s linear .22s; /* visibilité bascule après anim close */
-}
-.phone.is-open{
-  opacity:1;
-  transform: translateY(0) scale(1);
-  visibility:visible;
-  pointer-events:auto;
-  transition:
-    opacity .18s ease,
-    transform .22s cubic-bezier(.2,.6,.2,1),
-    visibility 0s; /* visible immédiatement */
-}
-/* phase de fermeture (optionnel: additif visuel) */
-.phone.is-closing{
-  opacity:0;
-  transform: translateY(8px) scale(.985);
-  pointer-events:none;
-}
-
-/* Réduction de mouvement */
-@media (prefers-reduced-motion: reduce){
-  .phone{
-    transition:none !important;
-    transform:none !important;
-  }
-}
-
-/* Boitier (bezel) */
-.bezel{
-  position:relative;flex:1;overflow:hidden;
-  border-radius:32px;background:#0e0f12;color:#eee;
-  border:1px solid #23252b;
-  box-shadow:0 18px 60px rgba(0,0,0,.55), inset 0 0 0 6px #0a0b0d;
-}
-
-/* Notch */
-.notch{
-  position:absolute;top:8px;left:50%;transform:translateX(-50%);
-  width:140px;height:26px;border-radius:14px 14px 20px 20px;
-  background:#0a0b0d;z-index:5;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-}
-.notch .cam{
-  width:10px;height:10px;border-radius:50%;
-  background:#0a0a0a;box-shadow:0 0 0 2px #101217, inset 0 0 4px rgba(0,0,0,.8);
-}
-.notch .speaker{
-  width:54px;height:6px;border-radius:4px;
-  background:#151821;box-shadow:inset 0 0 2px rgba(255,255,255,.08);
-}
-
-/* Barre d’état */
-.status{
-  margin-top:40px;
-  display:flex;align-items:center;gap:8px;
-  padding:10px 12px;
-  border-bottom:1px solid #23252b;background:#121419;
-}
+.status{margin-top:40px;display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #23252b;background:#121419}
 .status .dot{width:8px;height:8px;border-radius:50%;background:#55d66b;display:inline-block}
 .status .title{font-weight:700;letter-spacing:.3px}
-.status .close{
-  margin-left:auto;border:0;background:transparent;color:#aaa;
-  font-size:20px;cursor:pointer;line-height:1;
-}
+.status .close{margin-left:auto;border:0;background:transparent;color:#aaa;font-size:20px;cursor:pointer;line-height:1}
 .status .close:hover{color:#fff}
 
-/* ==== CONTENU ==== */
-.content{
-  position:absolute;inset:80px 12px 16px 12px;
-  display:flex;flex-direction:column;gap:12px;
-}
+.content{position:absolute;inset:80px 12px 16px 12px;display:flex;flex-direction:column;gap:12px}
 
-/* Homescreen */
 .homescreen{
   flex:1;display:flex;flex-direction:column;
   background:
     radial-gradient(120% 90% at 80% 10%,rgba(95,111,180,.12),transparent 60%),
     radial-gradient(120% 120% at 0% 100%,rgba(0,180,140,.12),transparent 55%),
     linear-gradient(180deg,#0f1218 0%,#0c0f14 100%);
-  border-radius:12px;
-  padding:14px 14px 20px 14px; /* extra bottom pour la dernière rangée */
-  border:1px solid #23252b;
+  border-radius:12px;padding:14px 14px 20px 14px;border:1px solid #23252b
 }
 
-/* Horloge & date */
 .clock{padding:6px 2px 14px 2px;text-align:center;user-select:none}
 .clock .time{font-size:36px;font-weight:700;letter-spacing:1px}
 .clock .date{opacity:.8;font-size:12px}
 
-/* ==== GRILLE D’APPS ==== */
-.apps{
-  margin-top:auto; /* pousse la grille vers le bas */
-  display:grid;
-  grid-template-columns:repeat(4, 1fr);
-  gap:12px;
-  padding:6px 0 0 0;
-  justify-items:center;
-  align-items:start;
-}
+.apps{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px 0 0 0;justify-items:center;align-items:start}
 
-.app{
-  appearance:none;border:0;background:transparent;color:inherit;
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-  text-align:center;cursor:pointer;outline:none;min-width:0;
-}
+/* évite le highlight bleu CEF */
+.app{-webkit-tap-highlight-color:transparent;appearance:none;border:0;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;outline:none;min-width:0}
 .app:focus-visible .app-icon{box-shadow:0 0 0 3px rgba(255,255,255,.18)}
-.app:active .app-icon{transform:scale(.95)}
+.app.is-pressing .app-icon{transform:scale(.96)}
 
-/* Icône (carré) */
 .app-icon{
-  width:56px;height:56px;border-radius:14px;display:grid;place-items:center;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), 0 8px 24px rgba(0,0,0,.35);
-  transition:transform .06s ease, box-shadow .06s ease, filter .06s ease;
+  width:56px;height:56px;border-radius:14px;display:grid;place-items:center;position:relative;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.35);
+  transition:transform .06s ease, box-shadow .06s ease, filter .06s ease
 }
 .app-icon svg{width:26px;height:26px;fill:#fff}
+.app-icon::after{
+  content:"";position:absolute;inset:0;margin:auto;width:12px;height:12px;border-radius:999px;
+  background:radial-gradient(circle, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 60%);
+  opacity:0;transform:scale(.2);pointer-events:none
+}
 
-/* Couleurs d’icônes */
 .app-icon.green{background:linear-gradient(180deg,#2bd975,#0fa958)}
 .app-icon.blue{background:linear-gradient(180deg,#3aa0ff,#3865ff)}
 .app-icon.orange{background:linear-gradient(180deg,#ffa245,#ff6b2c)}
 .app-icon.gray{background:linear-gradient(180deg,#5c6470,#3a4048)}
-
 .app-label{font-size:12px;opacity:.95;user-select:none}
+
+/* Cascade au démarrage */
+.phone.is-open .apps .app .app-icon{
+  animation:popIn .28s both;
+  animation-delay:calc(var(--i, 0) * 60ms);
+}
+@keyframes popIn{
+  0%{opacity:0;transform:translateY(6px) scale(.86)}
+  60%{opacity:1;transform:translateY(0) scale(1.04)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Tap pop + halo (jouées par JS sur .app) */
+.app.play-pop .app-icon{animation:tapPop .16s ease-out both}
+@keyframes tapPop{
+  0%{transform:scale(.96)}
+  70%{transform:scale(1.02)}
+  100%{transform:scale(1)}
+}
+.app.play-halo .app-icon::after{animation:halo .22s ease-out forwards}
+@keyframes halo{
+  0%{opacity:.55;transform:scale(.25)}
+  100%{opacity:0;transform:scale(2.2)}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .phone.is-open .apps .app .app-icon{animation:none}
+  .app.play-pop .app-icon{animation:none}
+  .app.play-halo .app-icon::after{animation:none}
+}
+
+/* ===== DEBUG PANEL ===== */
+.debug{
+  position:absolute;left:12px;right:12px;bottom:12px;max-height:140px;
+  padding:8px 10px;border-radius:8px;border:1px solid #2b2e36;
+  background:rgba(10,12,16,.85);backdrop-filter:blur(2px);
+  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size:11px;line-height:1.25;overflow:auto;display:none
+}
+.debug.show{display:block}
+.debug .line{white-space:pre-wrap;word-break:break-word}
+.debug .ok{color:#6be38a}
+.debug .warn{color:#ffcc66}
+.debug .err{color:#ff6b6b}
