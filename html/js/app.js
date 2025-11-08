@@ -1,5 +1,5 @@
 (()=> {
-  // Détection NUI (FiveM) vs navigateur (démo)
+  // DÃ©tection NUI (FiveM) vs navigateur (dÃ©mo)
   const isNUI = typeof GetParentResourceName === 'function' && typeof window.invokeNative === 'function';
 
   const phone    = document.getElementById('phone');
@@ -13,7 +13,7 @@
   }
 
   function nui(name, payload){
-    if (!isNUI) return Promise.resolve(); // no-op en mode démo
+    if (!isNUI) return Promise.resolve(); // no-op en mode dÃ©mo
     return fetch(`https://${GetParentResourceName()}/${name}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
@@ -21,7 +21,7 @@
     });
   }
 
-  // Réception des messages NUI
+  // RÃ©ception des messages NUI
   window.addEventListener('message', (e) => {
     const d = e.data || {};
     switch (d.action) {
@@ -31,29 +31,29 @@
         break;
 
       case 'boot':
-        info.textContent = 'Chargement du profil…';
+        info.textContent = 'Chargement du profilâ€¦';
         break;
 
       case 'set-user': {
         const u = d.user || {};
-        info.textContent = `Nom: ${u.name || ''} — Numéro: ${u.phone_number || '???'}`;
+        info.textContent = `Nom: ${u.name || ''} â€” NumÃ©ro: ${u.phone_number || '???'}`;
         break;
       }
     }
   });
 
-  // Bouton fermer (renvoie l’événement au script côté client)
+  // Bouton fermer (renvoie lâ€™Ã©vÃ©nement au script cÃ´tÃ© client)
   btnClose.addEventListener('click', () => nui('close', {}).catch(()=>{}));
 
-  // Démarrage
+  // DÃ©marrage
   document.addEventListener('DOMContentLoaded', () => {
     if (isNUI) {
-      // Signal au script que l’UI est prête
+      // Signal au script que lâ€™UI est prÃªte
       nui('ready', { ts: Date.now() }).catch(()=>{});
     } else {
-      // Mode démo navigateur : on montre juste le nouveau téléphone
+      // Mode dÃ©mo navigateur : on montre juste le nouveau tÃ©lÃ©phone
       show(true);
-      info.textContent = 'Mode démo — interface du téléphone prête.';
+      info.textContent = 'Mode dÃ©mo â€” interface du tÃ©lÃ©phone prÃªte.';
     }
   });
 
@@ -64,7 +64,7 @@
     setUser: (user) => window.postMessage({ action:'set-user', user }, '*')
   };
 
-  // En démo: Échap pour fermer
+  // En dÃ©mo: Ã‰chap pour fermer
   window.addEventListener('keydown', (ev) => {
     if (!isNUI && ev.key === 'Escape') show(false);
   });
