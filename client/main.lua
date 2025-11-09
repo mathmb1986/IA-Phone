@@ -1,6 +1,7 @@
 -- client/main.lua
 
 local gotUser        = false
+local userInfo           = {}
 local pendingThreadsCb = nil
 
 local function debug(msg)
@@ -74,7 +75,7 @@ end)
 RegisterNUICallback('messages:getThreads', function(data, cb)
   debug("NUI messages:getThreads")
   pendingThreadsCb = cb
-  TriggerServerEvent('ia-phone:get-threads')
+  TriggerServerEvent('ia-phone:get-threads-by-phone',userInfo.user)
 end)
 
 -- 2) Serveur renvoie la liste des threads (DB → Lua → NUI)
@@ -125,19 +126,6 @@ end)
 --------------------------------------------------
 --  PROFIL USER (numéro, nom, etc.)
 --------------------------------------------------
-
--- Le serveur renvoie les infos phone (ia-phone:set-user)
-RegisterNetEvent('ia-phone:set-user', function(user)
-  gotUser = true
-  user = user or {}
-  debug(("Réception user: phone_number=%s, name=%s"):format(user.phone_number or "?", user.name or "?"))
-
-  SendNUIMessage({
-    action = 'set-user',
-    user   = user
-  })
-end)
-
 -- Thread de boot : envoie "boot" au NUI + demande le profil au serveur
 CreateThread(function()
     -- Récupère les infos via ton Bridge (ESX/QBCORE/standalone…)
@@ -154,21 +142,24 @@ CreateThread(function()
         name = pdata.name or GetPlayerName(playerId) or ("ID " .. tostring(serverId))
     end
 
-    debug(("Client Ready, Framework=%s, name=%s, serverId=%s"):format(
+    debug(("Client Ready, Framework=%s, name=%s, serverId=%s, playerId=%s"):format(
         Bridge.name or "unknown",
         name,
-        tostring(serverId)
+        tostring(serverId),
+        tostring(playerId)
     ))
-    -- [     45610] [    GTAProcess]             MainThrd/ [IA-Phone][CL] Client Ready, Framework=ESX, name=Jordan Lee, serverId=33
+
     -- Info “boot” envoyée au NUI (pour ton panneau debug / info en bas)
     SendNUIMessage({
         action = 'boot',
         player = {
-            id   = pdata.source, -- remis comme original
+            id   = playerId, -- playerId est fix - server ID un chiffre qui est unique sur le serveur mais changer a chaque connection 
             name = name,
             job  = pdata.job and pdata.job.name or nil
         }
     })
+
+    userInfo.job  = pdata.job and pdata.job.name or nil
 
     -- On demande le profil au serveur (numéro, etc.) en passant
     -- BIEN le même “name” que l’event côté serveur attend.
@@ -184,3 +175,18 @@ CreateThread(function()
     end
 end)
 
+
+-- Le serveur renvoie les infos phone (ia-phone:set-user)
+RegisterNetEvent('ia-phone:set-user', function(user)
+  gotUser = true
+  user = user or {}
+
+  SendNUIMessage({
+    action = 'set-user',
+    user   = user
+  })
+
+  userInfo.user = user
+  debug(("Réception user: phone_number=%s, name=%s,userInfo=%s"):format(user.phone_number or "?", user.name or "?",userInfo))
+
+end)

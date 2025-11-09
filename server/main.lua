@@ -6,6 +6,8 @@ local function debug(msg)
 end
 
 
+-- 100% fonctionnel
+-- Connection Principale
 -- Client demande son profil (nom/numéro, etc.) — version "par nom"
 RegisterNetEvent('ia-phone:request-user',function(name)
   local src = source
@@ -28,18 +30,26 @@ end)
 
 
 
+
+
+-- Fonctionnel pour l'instant.
+-- A revoir
 ------------------------------------------------------------
 --  MESSAGES : événements serveur
 --  Ces events servent de pont entre ton client Lua et Repo.*
 ------------------------------------------------------------
-
+-- payload contien user.phone_number et user.name 
 -- Client veut toutes ses conversations (threads)
 -- client demande ses threads (on utilise phone_number comme key)
 RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
   local src = source
   payload = payload or {}
-  local phone = payload.phone or ''  -- attendu depuis client: le phone_number du joueur
+  local phone = payload.phone_number or ''  -- attendu depuis client: le phone_number du joueur
   debug(("ia-phone:get-threads-by-phone depuis %s (phone=%s)"):format(src, tostring(phone)))
+
+  -- si le phone_number est manquant
+  --TODO: voir faire la meme methode que au boot du Phone.. chercher le # par nom de joueur.
+  -- Cherche le threads par phone_number <= sauf qui prend le premier qui trouver et c'est pas forcement le bon'
 
   if phone == '' then
     -- si manque, essaye de récupérer via la table iaPhone_users en fonction du citizenid
@@ -53,9 +63,6 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
     end)
     return
   end
-
-
-
 
   Repo.GetThreadsForPhoneNumber(phone, function(threads)
     TriggerClientEvent('ia-phone:set-threads', src, threads or {})
