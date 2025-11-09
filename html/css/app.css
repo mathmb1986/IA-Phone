@@ -284,6 +284,7 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
   font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size:11px;line-height:1.25;overflow:auto;display:none
 }
+
 .debug.show{display:block}
 .debug .line{white-space:pre-wrap;word-break:break-word}
 .debug .ok{color:#6be38a}
