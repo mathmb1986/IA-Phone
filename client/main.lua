@@ -98,31 +98,51 @@ RegisterNetEvent('ia-phone:set-threads', function(threads)
   end
 end)
 
+
 -- 3) NUI envoie un message
+-- Envoi d'un message depuis le NUI
 RegisterNUICallback('messages:send', function(data, cb)
   local threadId    = tostring(data.threadId or "")
-  local text        = tostring(data.text or ""):gsub("^%s+",""):gsub("%s+$","")
+  local text        = tostring(data.text or ""):gsub("^%s+", ""):gsub("%s+$", "")
   local contactName = data.contactName
 
+  if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
+    debug("[CL] messages:send sans PhoneNumber")
+    cb({ ok = false, error = "no_phone" })
+    return
+  end
+
   if text == "" or threadId == "" then
-    debug(("[messages:send] invalid_data (threadId=%s, text='%s')"):format(threadId, text))
+    debug(("[CL] messages:send invalid_data (threadId=%s, text='%s')"):format(threadId, text))
     cb({ ok = false, error = "invalid_data" })
     return
   end
 
-  debug(("[messages:send] -> threadId=%s, text=%s"):format(threadId, text))
+  debug(("[CL] messages:send -> ownerPhone=%s, contactPhone=%s, text=%s"):format(
+    userInfo.user.phone_number, threadId, text
+  ))
 
-  -- L’UI met déjà le message en local (optimiste)
-  -- Ici on le pousse juste au serveur pour la DB
-  TriggerServerEvent('ia-phone:send-message', {
-    threadId    = threadId,
-    text        = text,
-    contactName = contactName
+  -- L’UI gère déjà le message localement (optimiste).
+  -- Ici on délègue juste à la DB.
+  TriggerServerEvent('ia-phone:send-message-by-phone', {
+    ownerPhone   = userInfo.user.phone_number,
+    contactPhone = threadId,
+    contactName  = contactName,
+    text         = text,
+    direction    = 'me'
   })
 
   cb({ ok = true })
 end)
 
+
+
+
+
+
+
+
+--  Boucle Principale.
 --------------------------------------------------
 --  PROFIL USER (numéro, nom, etc.)
 --------------------------------------------------
@@ -149,6 +169,7 @@ CreateThread(function()
         tostring(playerId)
     ))
 
+    -- Debug Information
     -- Info “boot” envoyée au NUI (pour ton panneau debug / info en bas)
     SendNUIMessage({
         action = 'boot',
@@ -181,6 +202,8 @@ RegisterNetEvent('ia-phone:set-user', function(user)
   gotUser = true
   user = user or {}
 
+  -- Debug Information
+  -- Info “set-user” envoyée au NUI (pour ton panneau debug / info en bas)
   SendNUIMessage({
     action = 'set-user',
     user   = user

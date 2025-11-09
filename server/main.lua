@@ -33,7 +33,7 @@ end)
 
 
 -- Fonctionnel pour l'instant.
--- A revoir
+-- A revoir certains points
 ------------------------------------------------------------
 --  MESSAGES : événements serveur
 --  Ces events servent de pont entre ton client Lua et Repo.*
@@ -51,6 +51,7 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
   --TODO: voir faire la meme methode que au boot du Phone.. chercher le # par nom de joueur.
   -- Cherche le threads par phone_number <= sauf qui prend le premier qui trouver et c'est pas forcement le bon'
 
+  -- ou supprimer cette methode car pas senser avoir de numeros nul ou inexistant ici.
   if phone == '' then
     -- si manque, essaye de récupérer via la table iaPhone_users en fonction du citizenid
     local citizenid = SvBridge.GetIdentifier(src)
@@ -70,30 +71,42 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
 end)
 
 
--- client envoie un message (par numéro)
--- payload = { ownerPhone = "...", contactPhone = "...", contactName = "...", text = "...", direction = "me" }
+-- Envoi d'un message basé sur les numéros de téléphone
+-- payload = { ownerPhone = "111-2358", contactPhone = "211-6889", contactName = "Trixy", text = "Yo", direction = "me" }
 RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
   local src = source
   payload = payload or {}
-  local ownerPhone   = payload.ownerPhone or ''
-  local contactPhone = payload.contactPhone or ''
-  local contactName  = payload.contactName or nil
-  local text         = payload.text or ''
+
+  local ownerPhone   = tostring(payload.ownerPhone or '')
+  local contactPhone = tostring(payload.contactPhone or '')
+  local contactName  = payload.contactName
+  local text         = (payload.text or ''):gsub('^%s+', ''):gsub('%s+$', '')
   local direction    = payload.direction or 'me'
 
   if ownerPhone == '' or contactPhone == '' or text == '' then
-    debug("[send-message-by-phone] données invalides")
+    debug(("[SV] send-message-by-phone: données invalides owner=%s contact=%s text='%s'"):format(
+      ownerPhone, contactPhone, text
+    ))
     return
   end
 
+  debug(("[SV] ia-phone:send-message-by-phone depuis %d (owner=%s, contact=%s)"):format(
+    src, ownerPhone, contactPhone
+  ))
+
   Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, direction, text, function(ok)
-    debug(("[send-message-by-phone] %s -> %s ok=%s"):format(tostring(ownerPhone), tostring(contactPhone), tostring(ok)))
-    -- Optionnel : on renvoie la liste mise à jour
+    if not ok then
+      debug("[SV] AddMessageByPhoneNumber a échoué")
+      return
+    end
+
+    -- Option 1 : on renvoie les threads mis à jour à ce joueur
     Repo.GetThreadsForPhoneNumber(ownerPhone, function(threads)
       TriggerClientEvent('ia-phone:set-threads', src, threads or {})
     end)
   end)
 end)
+
 
 
 

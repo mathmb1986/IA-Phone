@@ -175,19 +175,48 @@ function Repo.GetThreadsForPhoneNumber(ownerPhone, cb)
   )
 end
 
--- Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, direction, text, cb)
--- Ajoute un message; cb(ok)
+
+
+------------------------------------------------------------
+--  MESSAGES PAR NUMÉRO
+--  Table: iaPhone_messages
+--  Colonnes attendues:
+--    id INT PK AI
+--    owner_phone   VARCHAR(32)
+--    contact_phone VARCHAR(32)
+--    contact_name  VARCHAR(100)
+--    direction     ENUM('me','them')
+--    text          TEXT
+--    created_at    DATETIME
+--    seen          TINYINT(1)
+------------------------------------------------------------
+
+--- Insère un message pour un téléphone donné
+---@param ownerPhone string   -- numéro du téléphone du joueur ("111-2358")
+---@param contactPhone string -- numéro du contact ("211-6889" ou label système)
+---@param contactName string|nil
+---@param direction string    -- 'me' ou 'them'
+---@param text string
+---@param cb fun(ok:boolean)|nil
 function Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, direction, text, cb)
   cb = cb or function() end
+
   if not ownerPhone or ownerPhone == '' then
-    debug("AddMessageByPhoneNumber: ownerPhone manquant")
+    debug("[Repo] AddMessageByPhoneNumber: ownerPhone manquant")
     return cb(false)
   end
+
   if not contactPhone or contactPhone == '' then
-    contactPhone = 'unknown'
+    debug("[Repo] AddMessageByPhoneNumber: contactPhone manquant")
+    return cb(false)
   end
 
-  local dir = (direction == 'me') and 'me' or 'them'
+  if not text or text == '' then
+    debug("[Repo] AddMessageByPhoneNumber: text vide")
+    return cb(false)
+  end
+
+  local dir = (direction == 'them') and 'them' or 'me'
   local seen = (dir == 'me') and 1 or 0
 
   exports.oxmysql:insert(
@@ -205,7 +234,13 @@ function Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, dir
     },
     function(insertId)
       local ok = insertId and insertId > 0
-      debug(("AddMessageByPhoneNumber(%s -> %s, dir=%s) ok=%s"):format(ownerPhone, contactPhone, dir, tostring(ok)))
+      debug(("[Repo] AddMessageByPhoneNumber(%s -> %s, dir=%s) ok=%s, insertId=%s"):format(
+        tostring(ownerPhone),
+        tostring(contactPhone),
+        dir,
+        tostring(ok),
+        tostring(insertId)
+      ))
       cb(ok)
     end
   )
