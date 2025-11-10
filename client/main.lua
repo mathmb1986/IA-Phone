@@ -76,6 +76,7 @@ RegisterNUICallback('messages:getThreads', function(data, cb)
   debug("NUI messages:getThreads")
   pendingThreadsCb = cb
   TriggerServerEvent('ia-phone:get-threads-by-phone',userInfo.user)
+  --Rajouter demander les Contacts ? ou dans la boucle de demarrage ?
 end)
 
 -- 2) Serveur renvoie la liste des threads (DB → Lua → NUI)
@@ -136,6 +137,7 @@ RegisterNUICallback('messages:send', function(data, cb)
 end)
 
 
+-- 4 Todo: => rajouter RegisterNetEvent pour les contacts
 
 
 

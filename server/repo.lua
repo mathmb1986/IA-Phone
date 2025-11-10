@@ -20,6 +20,12 @@ local function generateNumber()
 end
 
 
+
+
+
+
+
+-- Get Phone Number Region
 -- [RECO] Trouve l?entr?e du perso exact: (citizenid + name)
 function Repo.GetUserByNameForCitizen(citizenid, userName, cb)
   exports.oxmysql:single(
@@ -109,7 +115,7 @@ function Repo.GetThreadsForPhoneNumber(ownerPhone, cb)
     return
   end
 
-  -- On r?cup?re tous les messages o? owner_phone = ownerPhone
+  -- On récupére tous les messages  owner_phone = ownerPhone
   exports.oxmysql:query(
     'SELECT id, owner_phone, contact_phone, contact_name, direction, text, created_at, seen FROM iaPhone_messages WHERE owner_phone = ? ORDER BY created_at ASC',
     { ownerPhone },
@@ -174,8 +180,6 @@ function Repo.GetThreadsForPhoneNumber(ownerPhone, cb)
     end
   )
 end
-
-
 
 ------------------------------------------------------------
 --  MESSAGES PAR NUM?RO
@@ -248,27 +252,105 @@ end
 
 
 
+------------------------------------------------------------
+--  CONTACTS PAR NUMÉRO
+--  Table: iaPhone_contacts
+--  Clé logique: (owner_number, contact_number)
+------------------------------------------------------------
+
+--- S'assure qu'un contact existe pour ce owner_number + contact_number.
+--- Si contact_name est nil/empty, tente de le déduire via iaPhone_users, sinon fallback = contact_number.
+---@param ownerNumber string      -- numéro du téléphone du joueur (ex: "111-2358")
+---@param contactNumber string    -- numéro du contact (ex: "571-8760" ou "dispatch")
+---@param contactName string|nil  -- label à afficher (facultatif)
+---@param cb fun(ok:boolean)|nil
+function Repo.EnsureContactForOwnerNumber(ownerNumber, contactNumber, contactName, cb)
+  cb = cb or function() end
+
+  if not ownerNumber or ownerNumber == '' then
+    debug("[Repo] EnsureContactForOwnerNumber: ownerNumber manquant")
+    return cb(false)
+  end
+
+  if not contactNumber or contactNumber == '' then
+    debug("[Repo] EnsureContactForOwnerNumber: contactNumber manquant")
+    return cb(false)
+  end
+
+  local resolvedName = contactName
+
+  -- Si on n'a pas de nom, on essaie de le récupérer depuis iaPhone_users (même système que pour les users)
+  local function doInsert()
+    if not resolvedName or resolvedName == '' then
+      resolvedName = contactNumber
+    end
+
+    exports.oxmysql:execute(
+      [[
+        INSERT IGNORE INTO iaPhone_contacts
+          (owner_number, contact_number, contact_name)
+        VALUES (?, ?, ?)
+      ]],
+      { ownerNumber, contactNumber, resolvedName },
+      function(res)
+        local affected = rowsAffected(res)
+        if affected > 0 then
+          debug(("[Repo] EnsureContactForOwnerNumber: créé contact '%s' (%s) pour owner_number=%s"):format(
+            resolvedName, contactNumber, ownerNumber
+          ))
+        else
+          debug(("[Repo] EnsureContactForOwnerNumber: contact déjà existant (%s -> %s)"):format(
+            ownerNumber, contactNumber
+          ))
+        end
+        cb(true)
+      end
+    )
+  end
+
+  if resolvedName and resolvedName ~= '' then
+    -- On a déjà un nom à utiliser -> insert direct
+    return doInsert()
+  end
+
+  -- On n'a pas de contactName: tentative de lookup dans iaPhone_users par numéro
+  exports.oxmysql:single(
+    'SELECT name FROM iaPhone_users WHERE phone_number = ? LIMIT 1',
+    { contactNumber },
+    function(row)
+      if row and row.name and row.name ~= '' then
+        resolvedName = row.name
+      end
+      doInsert()
+    end
+  )
+end
 
 
+--- Récupère tous les contacts d'un téléphone (par numéro)
+---@param ownerNumber string
+---@param cb fun(contacts: table)
+function Repo.GetContactsForOwnerNumber(ownerNumber, cb)
+  cb = cb or function() end
+
+  if not ownerNumber or ownerNumber == '' then
+    cb({})
+    return
+  end
+
+  exports.oxmysql:query(
+    'SELECT id, owner_number, contact_number, contact_name, is_favorite FROM iaPhone_contacts WHERE owner_number = ? ORDER BY contact_name ASC',
+    { ownerNumber },
+    function(rows)
+      rows = rows or {}
+      debug(("[Repo] GetContactsForOwnerNumber(%s) -> %d contacts"):format(ownerNumber, #rows))
+      cb(rows)
+    end
+  )
+end
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---- pu utile !!!
-
+--- pu utile !!! -v-
 
 ------------------------------------------------------------
 --  MESSAGES (DB) 

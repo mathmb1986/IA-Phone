@@ -70,6 +70,14 @@ end)
 
 -- Envoi d'un message bas� sur les num�ros de t�l�phone
 -- payload = { ownerPhone = "111-2358", contactPhone = "211-6889", contactName = "Trixy", text = "Yo", direction = "me" }
+-- Envoi d'un message basé sur les numéros de téléphone
+-- payload = {
+--   ownerPhone   = "111-2358",
+--   contactPhone = "571-8760",
+--   contactName  = "Trixy",   -- optionnel
+--   text         = "Yo",
+--   direction    = "me"       -- par défaut
+-- }
 RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
   local src = source
   payload = payload or {}
@@ -81,7 +89,7 @@ RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
   local direction    = payload.direction or 'me'
 
   if ownerPhone == '' or contactPhone == '' or text == '' then
-    debug(("[SV] send-message-by-phone: donn�es invalides owner=%s contact=%s text='%s'"):format(
+    debug(("[SV] send-message-by-phone: données invalides owner=%s contact=%s text='%s'"):format(
       ownerPhone, contactPhone, text
     ))
     return
@@ -91,18 +99,23 @@ RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
     src, ownerPhone, contactPhone
   ))
 
+  -- 1) Insert du message dans iaPhone_messages
   Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, direction, text, function(ok)
     if not ok then
-      debug("[SV] AddMessageByPhoneNumber a �chou�")
+      debug("[SV] AddMessageByPhoneNumber a échoué")
       return
     end
 
-    -- Option 1 : on renvoie les threads mis � jour � ce joueur
-    Repo.GetThreadsForPhoneNumber(ownerPhone, function(threads)
-      TriggerClientEvent('ia-phone:set-threads', src, threads or {})
+    -- 2) S'assurer que le contact existe pour ce téléphone
+    Repo.EnsureContactForOwnerNumber(ownerPhone, contactPhone, contactName, function(_)
+      -- 3) Rafraîchir la liste des threads pour ce joueur
+      Repo.GetThreadsForPhoneNumber(ownerPhone, function(threads)
+        TriggerClientEvent('ia-phone:set-threads', src, threads or {})
+      end)
     end)
   end)
 end)
+
 
 
 

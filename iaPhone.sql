@@ -34,12 +34,17 @@ CREATE TABLE IF NOT EXISTS iaPhone_messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- table de Contacts.
-CREATE TABLE iaPhone_contacts ( 
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  owner_number   VARCHAR(64)  NOT NULL,  -- le numéro du téléphone "qui possède" ce contact
-  contact_number VARCHAR(64)  NOT NULL,  -- le numéro du contact
-  contact_name   VARCHAR(100) NOT NULL,  -- le nom affiché dans les contacts
-  -- autres colonnes éventuelles (favori, note, etc.)
+CREATE TABLE IF NOT EXISTS iaPhone_contacts (
+  id             INT NOT NULL AUTO_INCREMENT,
+  owner_number   VARCHAR(64)  NOT NULL,   -- numéro du téléphone du joueur (ex: "111-2358")
+  contact_number VARCHAR(64)  NOT NULL,   -- numéro du contact (ou identifiant logique)
+  contact_name   VARCHAR(100) NOT NULL,   -- nom affiché dans le répertoire
 
-  UNIQUE KEY uk_owner_number (owner_number, contact_number)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  is_favorite    TINYINT(1) NOT NULL DEFAULT 0,
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_owner_contact (owner_number, contact_number),
+  KEY idx_owner (owner_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
