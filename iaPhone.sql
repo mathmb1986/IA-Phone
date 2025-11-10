@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS iaPhone_users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
-
 -- table messages (simple, efficace)
 CREATE TABLE IF NOT EXISTS iaPhone_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,4 +31,15 @@ CREATE TABLE IF NOT EXISTS iaPhone_messages (
   INDEX idx_owner_phone (owner_phone),
   INDEX idx_contact_phone (contact_phone),
   INDEX idx_owner_created (owner_phone, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- table de Contacts.
+CREATE TABLE iaPhone_contacts ( 
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  owner_number   VARCHAR(64)  NOT NULL,  -- le numéro du téléphone "qui possède" ce contact
+  contact_number VARCHAR(64)  NOT NULL,  -- le numéro du contact
+  contact_name   VARCHAR(100) NOT NULL,  -- le nom affiché dans les contacts
+  -- autres colonnes éventuelles (favori, note, etc.)
+
+  UNIQUE KEY uk_owner_number (owner_number, contact_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -3,7 +3,7 @@ game 'gta5'
 
 name 'IA-Phone'
 author 'mathmb1986'
-version '0.1.8'
+version '0.1.9'
 
 ui_page 'html/index.html'
 

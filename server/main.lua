@@ -8,15 +8,15 @@ end
 
 -- 100% fonctionnel
 -- Connection Principale
--- Client demande son profil (nom/numéro, etc.) — version "par nom"
+-- Client demande son profil (nom/numï¿½ro, etc.) ï¿½ version "par nom"
 RegisterNetEvent('ia-phone:request-user',function(name)
   local src = source
-  local id  = SvBridge.GetIdentifier(src)          -- citizenid (clé unique)
+  local id  = SvBridge.GetIdentifier(src)          -- citizenid (clï¿½ unique)
 
   Repo.GetUserByNameForCitizen(id,name, function(user)                -- lecture PAR NOM
     if not user then
       debug(("User introuvable pour le nom '%s', EnsureUser avec citizenid=%s"):format(name, id))
-      Repo.EnsureUser(id, name, function()         -- crée si absent (associe ce nom)
+      Repo.EnsureUser(id, name, function()         -- crï¿½e si absent (associe ce nom)
         Repo.GetUserByNameForCitizen(id,name, function(user2)         -- relit PAR NOM
           TriggerClientEvent('ia-phone:set-user', src, user2 or {})
         end)
@@ -29,13 +29,10 @@ RegisterNetEvent('ia-phone:request-user',function(name)
 end)
 
 
-
-
-
 -- Fonctionnel pour l'instant.
 -- A revoir certains points
 ------------------------------------------------------------
---  MESSAGES : événements serveur
+--  MESSAGES : ï¿½vï¿½nements serveur
 --  Ces events servent de pont entre ton client Lua et Repo.*
 ------------------------------------------------------------
 -- payload contien user.phone_number et user.name 
@@ -53,7 +50,7 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
 
   -- ou supprimer cette methode car pas senser avoir de numeros nul ou inexistant ici.
   if phone == '' then
-    -- si manque, essaye de récupérer via la table iaPhone_users en fonction du citizenid
+    -- si manque, essaye de rï¿½cupï¿½rer via la table iaPhone_users en fonction du citizenid
     local citizenid = SvBridge.GetIdentifier(src)
     -- on peut SELECT phone_number from iaPhone_users where citizenid = ?
     exports.oxmysql:scalar('SELECT phone_number FROM iaPhone_users WHERE citizenid = ? LIMIT 1', { citizenid }, function(phoneNumber)
@@ -71,7 +68,7 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
 end)
 
 
--- Envoi d'un message basé sur les numéros de téléphone
+-- Envoi d'un message basï¿½ sur les numï¿½ros de tï¿½lï¿½phone
 -- payload = { ownerPhone = "111-2358", contactPhone = "211-6889", contactName = "Trixy", text = "Yo", direction = "me" }
 RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
   local src = source
@@ -84,7 +81,7 @@ RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
   local direction    = payload.direction or 'me'
 
   if ownerPhone == '' or contactPhone == '' or text == '' then
-    debug(("[SV] send-message-by-phone: données invalides owner=%s contact=%s text='%s'"):format(
+    debug(("[SV] send-message-by-phone: donnï¿½es invalides owner=%s contact=%s text='%s'"):format(
       ownerPhone, contactPhone, text
     ))
     return
@@ -96,17 +93,16 @@ RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
 
   Repo.AddMessageByPhoneNumber(ownerPhone, contactPhone, contactName, direction, text, function(ok)
     if not ok then
-      debug("[SV] AddMessageByPhoneNumber a échoué")
+      debug("[SV] AddMessageByPhoneNumber a ï¿½chouï¿½")
       return
     end
 
-    -- Option 1 : on renvoie les threads mis à jour à ce joueur
+    -- Option 1 : on renvoie les threads mis ï¿½ jour ï¿½ ce joueur
     Repo.GetThreadsForPhoneNumber(ownerPhone, function(threads)
       TriggerClientEvent('ia-phone:set-threads', src, threads or {})
     end)
   end)
 end)
-
 
 
 

@@ -14,13 +14,13 @@ local function rowsAffected(res)
 end
 
 local function generateNumber()
-  local prefix = math.random(100, 777)     -- 3 chiffres aléatoires entre 100 et 777
-  local suffix = math.random(0, 9999)      -- 4 chiffres aléatoires entre 0000 et 9999
+  local prefix = math.random(100, 777)     -- 3 chiffres al?atoires entre 100 et 777
+  local suffix = math.random(0, 9999)      -- 4 chiffres al?atoires entre 0000 et 9999
   return ("%03d-%04d"):format(prefix, suffix)
 end
 
 
--- [RECO] Trouve l’entrée du perso exact: (citizenid + name)
+-- [RECO] Trouve l?entr?e du perso exact: (citizenid + name)
 function Repo.GetUserByNameForCitizen(citizenid, userName, cb)
   exports.oxmysql:single(
     'SELECT * FROM iaPhone_users WHERE citizenid = ? AND name = ? LIMIT 1',
@@ -38,7 +38,7 @@ function Repo.GetFirstUserByName(userName, cb)
   )
 end
 
--- Si tu veux juste le numéro (pour “le phone à John”)
+-- Si tu veux juste le num?ro (pour ?le phone ? John?)
 function Repo.GetPhoneNumberByNameForCitizen(citizenid, userName, cb)
   Repo.GetUserByNameForCitizen(citizenid, userName, function(row)
     cb(row and row.phone_number or nil)
@@ -46,7 +46,7 @@ function Repo.GetPhoneNumberByNameForCitizen(citizenid, userName, cb)
 end
 
 
--- Crée le user (si absent) + assigne un numéro unique à CE citizenid seulement
+-- Cr?e le user (si absent) + assigne un num?ro unique ? CE citizenid seulement
 function Repo.EnsureUser(citizenid, defaultName, cb)
   if not citizenid then return cb(false) end
 
@@ -57,7 +57,7 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
       local function assignUnique(attempt)
         attempt = attempt or 1
         if attempt > 8 then
-          debug(("Échec assignUnique après 8 tentatives pour %s"):format(citizenid))
+          debug(("?chec assignUnique apr?s 8 tentatives pour %s"):format(citizenid))
           return cb(false)
         end
 
@@ -74,7 +74,7 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
           { num, citizenid },
           function(res)
             if rowsAffected(res) > 0 then
-              -- Valide unicité
+              -- Valide unicit?
               exports.oxmysql:scalar(
                 'SELECT COUNT(*) FROM iaPhone_users WHERE phone_number = ?',
                 { num },
@@ -87,7 +87,7 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
                 end
               )
             else
-              -- Déjà existant (il a déjà un numéro) -> OK
+              -- D?j? existant (il a d?j? un num?ro) -> OK
               cb(true)
             end
           end
@@ -109,7 +109,7 @@ function Repo.GetThreadsForPhoneNumber(ownerPhone, cb)
     return
   end
 
-  -- On récupère tous les messages où owner_phone = ownerPhone
+  -- On r?cup?re tous les messages o? owner_phone = ownerPhone
   exports.oxmysql:query(
     'SELECT id, owner_phone, contact_phone, contact_name, direction, text, created_at, seen FROM iaPhone_messages WHERE owner_phone = ? ORDER BY created_at ASC',
     { ownerPhone },
@@ -164,7 +164,7 @@ function Repo.GetThreadsForPhoneNumber(ownerPhone, cb)
         table.insert(threads, t)
       end
 
-      -- trier par lastTime (string compare ok si HH:MM), sinon trier par created_at réel
+      -- trier par lastTime (string compare ok si HH:MM), sinon trier par created_at r?el
       table.sort(threads, function(a,b)
         return (a.lastTime or '') > (b.lastTime or '')
       end)
@@ -178,7 +178,7 @@ end
 
 
 ------------------------------------------------------------
---  MESSAGES PAR NUMÉRO
+--  MESSAGES PAR NUM?RO
 --  Table: iaPhone_messages
 --  Colonnes attendues:
 --    id INT PK AI
@@ -191,9 +191,9 @@ end
 --    seen          TINYINT(1)
 ------------------------------------------------------------
 
---- Insère un message pour un téléphone donné
----@param ownerPhone string   -- numéro du téléphone du joueur ("111-2358")
----@param contactPhone string -- numéro du contact ("211-6889" ou label système)
+--- Ins?re un message pour un t?l?phone donn?
+---@param ownerPhone string   -- num?ro du t?l?phone du joueur ("111-2358")
+---@param contactPhone string -- num?ro du contact ("211-6889" ou label syst?me)
 ---@param contactName string|nil
 ---@param direction string    -- 'me' ou 'them'
 ---@param text string
@@ -273,13 +273,13 @@ end
 ------------------------------------------------------------
 --  MESSAGES (DB) 
 --
---  Table recommandée : iaPhone_messages
---  Cols suggérées (adapte aux tiens si besoin) :
+--  Table recommand?e : iaPhone_messages
+--  Cols sugg?r?es (adapte aux tiens si besoin) :
 --    id            INT AUTO_INCREMENT PRIMARY KEY
---    owner         VARCHAR(64)  -- citizenid propriétaire du téléphone
---    contact       VARCHAR(64)  -- identifiant du contact (numéro ou “clé”)
---    contact_name  VARCHAR(64)  -- label affiché (Alex, Dispatch, etc.)
---    direction     ENUM('me','them')   -- qui a envoyé
+--    owner         VARCHAR(64)  -- citizenid propri?taire du t?l?phone
+--    contact       VARCHAR(64)  -- identifiant du contact (num?ro ou ?cl?)
+--    contact_name  VARCHAR(64)  -- label affich? (Alex, Dispatch, etc.)
+--    direction     ENUM('me','them')   -- qui a envoy?
 --    text          TEXT
 --    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 --    seen          TINYINT(1) DEFAULT 0
@@ -292,7 +292,7 @@ end
 --    }
 ------------------------------------------------------------
 
---- Retourne toutes les conversations d’un joueur sous forme de threads
+--- Retourne toutes les conversations d?un joueur sous forme de threads
 ---@param citizenid string
 ---@param cb fun(threads: table)
 function Repo.GetThreadsForCitizen(citizenid, cb)
@@ -309,7 +309,7 @@ function Repo.GetThreadsForCitizen(citizenid, cb)
       local threadsByContact = {}
 
       for _, row in ipairs(rows) do
-        -- essaie différents noms de colonnes possibles
+        -- essaie diff?rents noms de colonnes possibles
         local contact = row.contact or row.contact_number or row.other or 'unknown'
         local contactName = row.contact_name or contact
 
@@ -335,7 +335,7 @@ function Repo.GetThreadsForCitizen(citizenid, cb)
         -- Simple conversion "YYYY-MM-DD HH:MM:SS" -> "HH:MM"
         local hhmm = ''
         if type(ctime) == 'string' then
-          hhmm = ctime:sub(12, 16)  -- caractères 12-16 = HH:MM
+          hhmm = ctime:sub(12, 16)  -- caract?res 12-16 = HH:MM
         end
 
         table.insert(thread.messages, {
@@ -357,7 +357,7 @@ function Repo.GetThreadsForCitizen(citizenid, cb)
         table.insert(threads, t)
       end
 
-      -- Threads les plus récents en premier
+      -- Threads les plus r?cents en premier
       table.sort(threads, function(a,b)
         return (a.lastTime or '') > (b.lastTime or '')
       end)

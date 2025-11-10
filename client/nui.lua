@@ -34,3 +34,4 @@ PhoneNui = {
   Toggle = togglePhone,
   IsOpen = function() return isOpen end
 }
+
