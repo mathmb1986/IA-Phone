@@ -137,7 +137,47 @@ RegisterNUICallback('messages:send', function(data, cb)
 end)
 
 
--- 4 Todo: => rajouter RegisterNetEvent pour les contacts
+-- 4 NUI envoie Contacts
+--- Contacts
+
+-- NUI demande la liste des contacts
+RegisterNUICallback('contacts:getContacts', function(data, cb)
+  cb = cb or function() end
+
+  if not myPhoneNumber or myPhoneNumber == '' then
+    debug("[CL] contacts:getContacts sans myPhoneNumber")
+    cb({ ok = false, contacts = {}, error = "no_phone" })
+    return
+  end
+
+  debug(("[CL] contacts:getContacts -> phone=%s"):format(myPhoneNumber))
+
+  pendingContactsCb = cb
+  TriggerServerEvent('ia-phone:get-contacts-by-phone', {
+    phone = myPhoneNumber
+  })
+end)
+
+-- Réception des contacts du serveur
+RegisterNetEvent('ia-phone:set-contacts', function(contacts)
+  contacts = contacts or {}
+  debug(("[CL] ia-phone:set-contacts -> %d contacts"):format(#contacts))
+
+  if pendingContactsCb then
+    pendingContactsCb({
+      ok       = true,
+      contacts = contacts
+    })
+    pendingContactsCb = nil
+  else
+    -- fallback (au cas où tu veuilles pousser des updates live plus tard)
+    SendNUIMessage({
+      action   = 'contacts:setContacts',
+      contacts = contacts
+    })
+  end
+end)
+
 
 
 

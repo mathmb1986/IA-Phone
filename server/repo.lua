@@ -327,6 +327,13 @@ function Repo.EnsureContactForOwnerNumber(ownerNumber, contactNumber, contactNam
 end
 
 
+------------------------------------------------------------
+--  CONTACTS PAR NUMÉRO
+--  Table: iaPhone_contacts
+--  Colonnes:
+--    id, owner_number, contact_number, contact_name, is_favorite, created_at, updated_at
+------------------------------------------------------------
+
 --- Récupère tous les contacts d'un téléphone (par numéro)
 ---@param ownerNumber string
 ---@param cb fun(contacts: table)
@@ -348,6 +355,7 @@ function Repo.GetContactsForOwnerNumber(ownerNumber, cb)
     end
   )
 end
+
 
 
 --- pu utile !!! -v-

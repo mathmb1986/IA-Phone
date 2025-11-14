@@ -117,5 +117,24 @@ RegisterNetEvent('ia-phone:send-message-by-phone', function(payload)
 end)
 
 
+-- Récupération des contacts pour un téléphone (par numéro)
+-- payload = { phone = "111-2358" }
+RegisterNetEvent('ia-phone:get-contacts-by-phone', function(payload)
+  local src = source
+  payload = payload or {}
+
+  local phone = tostring(payload.phone or '')
+  if phone == '' then
+    debug(("[SV] ia-phone:get-contacts-by-phone: phone manquant (src=%d)"):format(src))
+    TriggerClientEvent('ia-phone:set-contacts', src, {})
+    return
+  end
+
+  debug(("[SV] ia-phone:get-contacts-by-phone depuis %d (phone=%s)"):format(src, phone))
+
+  Repo.GetContactsForOwnerNumber(phone, function(contacts)
+    TriggerClientEvent('ia-phone:set-contacts', src, contacts or {})
+  end)
+end)
 
 

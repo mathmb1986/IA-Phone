@@ -116,52 +116,37 @@
           </div>
 
           <!-- APP CONTACTS -->
-          <div class="screen-contacts" id="screenContacts" role="region" aria-label="Contacts" hidden>
+          <div class="screen-messages screen-contacts" role="region" id="screenContacts" hidden>
               <div class="msg-header">
-                  <button id="btnBackHomeContacts" class="msg-back" aria-label="Retour à l’accueil">←</button>
+                  <button id="btnBackContacts" class="msg-back" aria-label="Retour à l’accueil">←</button>
                   <div class="msg-header-text">
                       <div class="msg-title">Contacts</div>
-                      <div id="contactsSubtitle" class="msg-subtitle">0 contact</div>
+                      <div id="contactsSubtitle" class="msg-subtitle">Répertoire</div>
                   </div>
-                  <button id="btnAddContact" class="msg-add" aria-label="Nouveau contact" title="Nouveau contact">+</button>
               </div>
 
               <div class="msg-body">
-                  <!-- Liste des contacts -->
-                  <div class="contacts-list" id="contactsList"></div>
+                  <div id="contactsEmpty" class="msg-empty">Aucun contact.</div>
+                  <div id="contactsList" class="msg-threads"></div>
 
-                  <!-- Message vide -->
-                  <div class="msg-empty" id="contactsEmpty">
-                      Aucun contact enregistré.
-                  </div>
-
-                  <!-- Modal ajout / édition de contact -->
-                  <div class="contact-modal-backdrop" id="contactModal" hidden>
-                      <div class="contact-modal">
-                          <h3 id="contactModalTitle" class="contact-modal-title">Nouveau contact</h3>
-
-                          <form id="contactForm" autocomplete="off">
-                              <label class="contact-field">
-                                  <span>Nom</span>
-                                  <input id="contactNameInput" type="text" name="name" placeholder="Nom du contact" required />
-                              </label>
-
-                              <label class="contact-field">
-                                  <span>Numéro</span>
-                                  <input id="contactNumberInput" type="text" name="number" placeholder="Numéro de téléphone" required />
-                              </label>
-
-                              <div class="contact-modal-actions">
-                                  <button type="button" id="contactCancel" class="btn-secondary">Annuler</button>
-                                  <button type="submit" id="contactSave" class="btn-primary">Enregistrer</button>
-                              </div>
-                          </form>
+                  <form id="contactEditor" class="contact-editor hidden">
+                      <div class="contact-editor-row">
+                          <label for="contactNameInput">Nom</label>
+                          <input id="contactNameInput" type="text" maxlength="100" />
                       </div>
-                  </div>
+                      <div class="contact-editor-row">
+                          <label for="contactNumberInput">Numéro</label>
+                          <input id="contactNumberInput" type="text" maxlength="32" />
+                      </div>
+                      <div class="contact-editor-actions">
+                          <button type="button" id="btnContactCancel" class="btn-secondary">Annuler</button>
+                          <button type="submit" id="btnContactSave" class="btn-primary">Enregistrer</button>
+                      </div>
+                  </form>
               </div>
+
+              <button id="btnAddContact" class="msg-add" title="Ajouter un contact">+</button>
           </div>
-
-
 
           <!-- Panneau DEBUG (toggle F4) -->
           <div id="debugPanel" class="debug"></div>
