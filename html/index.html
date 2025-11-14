@@ -142,11 +142,27 @@
                           <button type="button" id="btnContactCancel" class="btn-secondary">Annuler</button>
                           <button type="submit" id="btnContactSave" class="btn-primary">Enregistrer</button>
                       </div>
-                  </form>
+                  </form>						
               </div>
 
               <button id="btnAddContact" class="msg-add" title="Ajouter un contact">+</button>
           </div>
+
+			<!-- DÉTAILS D'UN CONTACT -->
+			<div id="contactDetails" class="screen-contact-details" hidden>
+			  <div class="msg-header">
+				<button id="btnBackToContacts" class="msg-back" aria-label="Retour">←</button>
+				<div class="msg-header-text">
+				  <div class="msg-title" id="detailContactName">Nom</div>
+				  <div class="msg-subtitle" id="detailContactNumber">Numéro</div>
+				</div>
+			  </div>
+			  <div class="msg-body contact-details-actions">
+				<button class="btn-primary"  id="btnMessageContact">Envoyer un message</button>
+				<button class="btn-secondary" id="btnCallContact">Appeler</button>
+			  </div>
+			</div>
+
 
           <!-- Panneau DEBUG (toggle F4) -->
           <div id="debugPanel" class="debug"></div>

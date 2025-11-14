@@ -501,10 +501,6 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
 
 
 
-
-
-
-
 .contact-editor-row {
     display: flex;
     flex-direction: column;
@@ -554,4 +550,52 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
 .btn-primary {
     background: #32cd32;
     color: #000;
+}
+.screen-contact-details {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  background: linear-gradient(180deg,#10131a 0%,#090b10 100%);
+  border-radius: 12px;
+  border: 1px solid #23252b;
+  overflow: hidden;
+}
+.screen-contact-details.active {
+  display: flex;
+}
+
+.contact-details-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.contact-details-actions button {
+  font-size: 14px;
+  padding: 10px 16px;
+}
+.screen-contact-details {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  background: linear-gradient(180deg,#10131a 0%,#090b10 100%);
+  border-radius: 12px;
+  border: 1px solid #23252b;
+  overflow: hidden;
+}
+.screen-contact-details.active {
+  display: flex;
+}
+
+.contact-details-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.contact-details-actions button {
+  font-size: 14px;
+  padding: 10px 16px;
 }

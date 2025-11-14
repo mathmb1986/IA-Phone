@@ -798,57 +798,61 @@
     }
   }
 
-  function handleContactClick(contactNumber) {
-    dbg('CONTACT CLICK', { contactNumber: contactNumber });
+    function handleContactClick(contactNumber) {
+        dbg('CONTACT CLICK', { contactNumber });
 
-    if (!contactNumber) return;
+        if (!contactNumber) return;
 
-    // chercher thread existant
-    var existing = null;
-    var i;
-    for (i = 0; i < conversations.length; i++) {
-      if (String(conversations[i].id) === String(contactNumber)) {
-        existing = conversations[i];
-        break;
-      }
-    }
+        // Trouver le contact
+        var contact = contacts.find(c => c.contact_number === contactNumber);
+        if (!contact) return;
 
-    if (!existing) {
-      // créer un thread virtuel
-      var label = contactNumber;
-      var k;
-      for (k = 0; k < contacts.length; k++) {
-        if (String(contacts[k].contact_number) === String(contactNumber)) {
-          if (contacts[k].contact_name) label = contacts[k].contact_name;
-          break;
+        // Stocker temporairement dans l'interface
+        const nameEl = document.getElementById('detailContactName');
+        const numberEl = document.getElementById('detailContactNumber');
+        nameEl.textContent = contact.contact_name || contact.contact_number;
+        numberEl.textContent = contact.contact_number;
+
+        // Afficher le panneau de détails
+        if (screenContacts) {
+            screenContacts.hidden = true;
+            screenContacts.classList.remove('active');
         }
-      }
 
-      existing = {
-        id: contactNumber,
-        name: label,
-        initials: (label && label[0]) ? label[0].toUpperCase() : '?',
-        lastTime: '',
-        lastText: '',
-        unread: 0,
-        messages: []
-      };
-      conversations.push(existing);
-      renderThreadsList();
+        const detailsScreen = document.getElementById('contactDetails');
+        if (detailsScreen) {
+            detailsScreen.hidden = false;
+            detailsScreen.classList.add('active');
+        }
+
+        // Bouton Message
+        const btnMsg = document.getElementById('btnMessageContact');
+        if (btnMsg) {
+            btnMsg.onclick = function () {
+                openThread(contact.contact_number);
+                detailsScreen.hidden = true;
+                detailsScreen.classList.remove('active');
+                screenMsgs.hidden = false;
+                screenMsgs.classList.add('active');
+            };
+        }
+
+        // Bouton Appel
+        const btnCall = document.getElementById('btnCallContact');
+        if (btnCall) {
+            btnCall.onclick = function () {
+                dbg('CALL CONTACT', { contactNumber });
+                if (isNUI) {
+                    callNui('contacts:callContact', {
+                        number: contact.contact_number
+                    });
+                } else {
+                    alert('Appel vers : ' + contact.contact_number);
+                }
+            };
+        }
     }
 
-    // Bascule vers Messages
-    if (screenContacts) {
-      screenContacts.hidden = true;
-      screenContacts.classList.remove('active');
-    }
-    if (screenMsgs) {
-      screenMsgs.hidden = false;
-      screenMsgs.classList.add('active');
-    }
-
-    openThread(existing.id);
-  }
 
   /* ============================================================
    *                NUI MESSAGES (SendNUIMessage)
@@ -937,6 +941,20 @@
         });
     }
 
+	const btnBackToContacts = document.getElementById('btnBackToContacts');
+	if (btnBackToContacts) {
+	btnBackToContacts.addEventListener('click', function () {
+		const detailsScreen = document.getElementById('contactDetails');
+		if (detailsScreen) {
+		detailsScreen.hidden = true;
+		detailsScreen.classList.remove('active');
+		}
+		if (screenContacts) {
+		screenContacts.hidden = false;
+		screenContacts.classList.add('active');
+		}
+	});
+	}
 
   /* ============================================================
    *                           INIT
