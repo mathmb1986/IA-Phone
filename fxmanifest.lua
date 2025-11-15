@@ -3,7 +3,7 @@ game 'gta5'
 
 name 'IA-Phone'
 author 'mathmb1986'
-version '0.1.9'
+version '0.2.0'
 
 ui_page 'html/index.html'
 
@@ -27,6 +27,7 @@ client_scripts {
 server_scripts {
   '@oxmysql/lib/MySQL.lua',   -- <=== OBLIGATOIRE
   'server/bridge.lua',
-  'server/repo.lua',          -- <=== AJOUT
+  'server/repo.lua',
+  'server/generator.lua',
   'server/main.lua'
 }

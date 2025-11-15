@@ -472,6 +472,9 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
     gap: 6px;
 }
 
+
+/* Un style simple pour les boutons secondaires / primaires si tu n'en as pas déjà */
+.btn-tertiary,
 .btn-secondary,
 .btn-primary {
     border-radius: 999px;
@@ -481,24 +484,33 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
     cursor: pointer;
 }
 
-.btn-secondary {
-    background: #1b1f2a;
-    color: #e5e9ff;
+.btn-tertiary:hover {
+    background: #f90000;
 }
 
 .btn-secondary:hover {
-    background: #242a3a;
-}
-
-.btn-primary {
-    background: #4b84ff;
-    color: #fff;
+    background: #14ce13;
 }
 
 .btn-primary:hover {
-    background: #5a8eff;
+    background: #14ce13;
 }
 
+
+.btn-tertiary {
+    background: #fff114;
+	color: #000;
+}
+
+.btn-secondary {
+    background: #2bd975;
+    color: #000;
+}
+
+.btn-primary {
+    background: #3865ff;
+    color: #000;
+}
 
 
 .contact-editor-row {
@@ -533,24 +545,8 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
     margin-left: auto;
 }
 
-/* Un style simple pour les boutons secondaires / primaires si tu n'en as pas déjà */
-.btn-secondary,
-.btn-primary {
-    border-radius: 999px;
-    padding: 0.35rem 0.9rem;
-    font-size: 0.8rem;
-    border: none;
-}
 
-.btn-secondary {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-}
 
-.btn-primary {
-    background: #32cd32;
-    color: #000;
-}
 .screen-contact-details {
   flex: 1;
   display: none;

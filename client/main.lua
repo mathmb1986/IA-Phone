@@ -107,7 +107,7 @@ RegisterNUICallback('messages:send', function(data, cb)
   local text        = tostring(data.text or ""):gsub("^%s+", ""):gsub("%s+$", "")
   local contactName = data.contactName
 
-  if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
+  if not userInfo.userInfo.user.phone_number or userInfo.userInfo.user.phone_number == '' then
     debug("[CL] messages:send sans PhoneNumber")
     cb({ ok = false, error = "no_phone" })
     return
@@ -144,17 +144,17 @@ end)
 RegisterNUICallback('contacts:getContacts', function(data, cb)
   cb = cb or function() end
 
-  if not myPhoneNumber or myPhoneNumber == '' then
-    debug("[CL] contacts:getContacts sans myPhoneNumber")
+  if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
+    debug("[CL] contacts:getContacts sans user.phone_number")
     cb({ ok = false, contacts = {}, error = "no_phone" })
     return
   end
 
-  debug(("[CL] contacts:getContacts -> phone=%s"):format(myPhoneNumber))
+  debug(("[CL] contacts:getContacts -> phone=%s"):format(userInfo.user.phone_number))
 
   pendingContactsCb = cb
   TriggerServerEvent('ia-phone:get-contacts-by-phone', {
-    phone = myPhoneNumber
+    phone = userInfo.user.phone_number
   })
 end)
 
@@ -180,6 +180,61 @@ end)
 
 
 
+-- Ajouter / mettre à jour un contact depuis NUI
+-- data = { name="...", number="..." }
+RegisterNUICallback('contacts:addContact', function(data, cb)
+  cb = cb or function() end
+
+  if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
+    debug("[CL] contacts:addContact sans user.phone_number")
+    cb({ ok = false, error = "no_phone" })
+    return
+  end
+
+  local name   = tostring(data.name or ""):gsub("^%s+",""):gsub("%s+$","")
+  local number = tostring(data.number or ""):gsub("^%s+",""):gsub("%s+$","")
+
+  if name == "" or number == "" then
+    cb({ ok = false, error = "invalid_data" })
+    return
+  end
+
+  debug(("[CL] contacts:addContact -> owner=%s, num=%s, name='%s'"):format(userInfo.user.phone_number, number, name))
+
+  pendingContactsCb = cb
+  TriggerServerEvent('ia-phone:add-contact-by-phone', {
+    ownerPhone    = userInfo.user.phone_number,
+    contactNumber = number,
+    contactName   = name
+  })
+end)
+
+
+-- Supprimer un contact depuis NUI
+-- data = { number="..." }
+RegisterNUICallback('contacts:deleteContact', function(data, cb)
+  cb = cb or function() end
+
+  if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
+    debug("[CL] contacts:deleteContact sans user.phone_number")
+    cb({ ok = false, error = "no_phone" })
+    return
+  end
+
+  local number = tostring(data.number or ""):gsub("^%s+",""):gsub("%s+$","")
+  if number == "" then
+    cb({ ok = false, error = "invalid_data" })
+    return
+  end
+
+  debug(("[CL] contacts:deleteContact -> owner=%s, num=%s"):format(userInfo.user.phone_number, number))
+
+  pendingContactsCb = cb
+  TriggerServerEvent('ia-phone:delete-contact-by-phone', {
+    ownerPhone    = userInfo.user.phone_number,
+    contactNumber = number
+  })
+end)
 
 
 
@@ -252,6 +307,6 @@ RegisterNetEvent('ia-phone:set-user', function(user)
   })
 
   userInfo.user = user
-  debug(("Réception user: phone_number=%s, name=%s,userInfo=%s"):format(user.phone_number or "?", user.name or "?",userInfo))
+  debug(("Réception user: phone_number=%s, name=%s,userInfo=%s"):format(userInfo.user.phone_number or "?", user.name or "?",userInfo))
 
 end)

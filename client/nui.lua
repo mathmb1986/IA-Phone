@@ -30,7 +30,8 @@ local function togglePhone()
   SendNUIMessage({ action = 'phone:state', open = isOpen })
 end
 
-PhoneNui = {
+PhoneNui = 
+{
   Toggle = togglePhone,
   IsOpen = function() return isOpen end
 }

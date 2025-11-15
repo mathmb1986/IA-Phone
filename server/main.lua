@@ -67,6 +67,55 @@ RegisterNetEvent('ia-phone:get-threads-by-phone', function(payload)
   end)
 end)
 
+-- Ajouter / mettre à jour un contact (par numéro)
+-- payload = { ownerPhone="111-2358", contactNumber="571-8760", contactName="Trixy Lee" }
+RegisterNetEvent('ia-phone:add-contact-by-phone', function(payload)
+  local src = source
+  payload = payload or {}
+
+  local ownerPhone    = tostring(payload.ownerPhone or "")
+  local contactNumber = tostring(payload.contactNumber or "")
+  local contactName   = tostring(payload.contactName or "")
+
+  if ownerPhone == "" or contactNumber == "" or contactName == "" then
+    debug(("[SV] add-contact-by-phone: invalid (owner=%s, num=%s, name='%s')"):format(ownerPhone, contactNumber, contactName))
+    TriggerClientEvent('ia-phone:set-contacts', src, {})
+    return
+  end
+
+  debug(("[SV] ia-phone:add-contact-by-phone from %d (owner=%s, contact=%s, name='%s')"):format(src, ownerPhone, contactNumber, contactName))
+
+  Repo.AddOrUpdateContact(ownerPhone, contactNumber, contactName, function(ok)
+    Repo.GetContactsForOwnerNumber(ownerPhone, function(contacts)
+      TriggerClientEvent('ia-phone:set-contacts', src, contacts or {})
+    end)
+  end)
+end)
+
+-- Supprimer un contact (par numéro)
+-- payload = { ownerPhone="111-2358", contactNumber="571-8760" }
+RegisterNetEvent('ia-phone:delete-contact-by-phone', function(payload)
+  local src = source
+  payload = payload or {}
+
+  local ownerPhone    = tostring(payload.ownerPhone or "")
+  local contactNumber = tostring(payload.contactNumber or "")
+
+  if ownerPhone == "" or contactNumber == "" then
+    debug(("[SV] delete-contact-by-phone: invalid (owner=%s, num=%s)"):format(ownerPhone, contactNumber))
+    TriggerClientEvent('ia-phone:set-contacts', src, {})
+    return
+  end
+
+  debug(("[SV] ia-phone:delete-contact-by-phone from %d (owner=%s, contact=%s)"):format(src, ownerPhone, contactNumber))
+
+  Repo.DeleteContact(ownerPhone, contactNumber, function(ok)
+    Repo.GetContactsForOwnerNumber(ownerPhone, function(contacts)
+      TriggerClientEvent('ia-phone:set-contacts', src, contacts or {})
+    end)
+  end)
+end)
+
 
 -- Envoi d'un message bas� sur les num�ros de t�l�phone
 -- payload = { ownerPhone = "111-2358", contactPhone = "211-6889", contactName = "Trixy", text = "Yo", direction = "me" }

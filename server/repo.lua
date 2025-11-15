@@ -13,16 +13,6 @@ local function rowsAffected(res)
   return 0
 end
 
-local function generateNumber()
-  local prefix = math.random(100, 777)     -- 3 chiffres al?atoires entre 100 et 777
-  local suffix = math.random(0, 9999)      -- 4 chiffres al?atoires entre 0000 et 9999
-  return ("%03d-%04d"):format(prefix, suffix)
-end
-
-
-
-
-
 
 
 -- Get Phone Number Region
@@ -67,8 +57,8 @@ function Repo.EnsureUser(citizenid, defaultName, cb)
           return cb(false)
         end
 
-        local num = generateNumber()
-
+        --local num = generateNumber()
+        local number = exports['ia-phone']:GeneratePhoneNumber()	
         -- CIBLE UN SEUL USER: citizenid
         exports.oxmysql:execute(
           [[
@@ -355,6 +345,85 @@ function Repo.GetContactsForOwnerNumber(ownerNumber, cb)
     end
   )
 end
+
+
+------------------------------------------------------------
+--  PHONE NORMALIZATION (simple - enlève espaces, parenthèses, garde chiffres et '-')
+------------------------------------------------------------
+local function keepDigitsAndDash(s)
+  if not s then return "" end
+  s = tostring(s)
+  -- Remplace espaces / parenthèses / points par rien
+  s = s:gsub("[%s%(%).]", "")
+  -- Optionnel: tu peux forcer un format ###-#### si tu as 7 chiffres
+  -- Ici on laisse tel quel (ex: 111-2358 ou 5145550123)
+  return s
+end
+
+function Repo.NormalizePhoneNumber(num)
+  return keepDigitsAndDash(num)
+end
+
+------------------------------------------------------------
+--  CONTACTS: AddOrUpdateContact / DeleteContact  (par NUMÉRO)
+--  Table: iaPhone_contacts (owner_number, contact_number, contact_name) UNIQUE(owner_number, contact_number)
+------------------------------------------------------------
+
+--- Ajoute ou met à jour un contact pour un téléphone (par numéro)
+---@param ownerNumber string      -- numéro du téléphone du joueur (ex: "111-2358")
+---@param contactNumber string    -- numéro du contact (ex: "571-8760")
+---@param contactName string      -- nom affiché pour le contact
+---@param cb fun(ok:boolean)|nil
+function Repo.AddOrUpdateContact(ownerNumber, contactNumber, contactName, cb)
+  cb = cb or function() end
+
+  ownerNumber   = Repo.NormalizePhoneNumber(ownerNumber)
+  contactNumber = Repo.NormalizePhoneNumber(contactNumber)
+  contactName   = (contactName or ""):gsub("^%s+", ""):gsub("%s+$", "")
+
+  if ownerNumber == "" or contactNumber == "" or contactName == "" then
+    debug(("[Repo] AddOrUpdateContact: invalid data (owner=%s, contact=%s, name='%s')"):format(ownerNumber, contactNumber, contactName))
+    return cb(false)
+  end
+
+  -- UPSERT: si existe, met à jour le nom; sinon crée.
+  exports.oxmysql:execute([[
+    INSERT INTO iaPhone_contacts (owner_number, contact_number, contact_name)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE contact_name = VALUES(contact_name), updated_at = CURRENT_TIMESTAMP
+  ]], { ownerNumber, contactNumber, contactName }, function(res)
+    local ok = res and (res.affectedRows or res.affected_rows or 0) > 0
+    debug(("[Repo] AddOrUpdateContact owner=%s, contact=%s, name='%s' -> ok=%s"):format(ownerNumber, contactNumber, contactName, tostring(ok)))
+    cb(ok)
+  end)
+end
+
+--- Supprime un contact pour un téléphone (par numéro)
+---@param ownerNumber string
+---@param contactNumber string
+---@param cb fun(ok:boolean)|nil
+function Repo.DeleteContact(ownerNumber, contactNumber, cb)
+  cb = cb or function() end
+
+  ownerNumber   = Repo.NormalizePhoneNumber(ownerNumber)
+  contactNumber = Repo.NormalizePhoneNumber(contactNumber)
+
+  if ownerNumber == "" or contactNumber == "" then
+    debug(("[Repo] DeleteContact: invalid data (owner=%s, contact=%s)"):format(ownerNumber, contactNumber))
+    return cb(false)
+  end
+
+  exports.oxmysql:execute([[
+    DELETE FROM iaPhone_contacts
+    WHERE owner_number = ? AND contact_number = ?
+  ]], { ownerNumber, contactNumber }, function(res)
+    local ok = res and (res.affectedRows or res.affected_rows or 0) > 0
+    debug(("[Repo] DeleteContact owner=%s, contact=%s -> ok=%s"):format(ownerNumber, contactNumber, tostring(ok)))
+    cb(ok)
+  end)
+end
+
+
 
 
 
