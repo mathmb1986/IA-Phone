@@ -139,7 +139,6 @@ end)
 
 -- 4 NUI envoie Contacts
 --- Contacts
-
 -- NUI demande la liste des contacts
 RegisterNUICallback('contacts:getContacts', function(data, cb)
   cb = cb or function() end
@@ -179,7 +178,6 @@ RegisterNetEvent('ia-phone:set-contacts', function(contacts)
 end)
 
 
-
 -- Ajouter / mettre à jour un contact depuis NUI
 -- data = { name="...", number="..." }
 RegisterNUICallback('contacts:addContact', function(data, cb)
@@ -214,7 +212,7 @@ end)
 -- data = { number="..." }
 RegisterNUICallback('contacts:deleteContact', function(data, cb)
   cb = cb or function() end
-
+  
   if not userInfo.user.phone_number or userInfo.user.phone_number == '' then
     debug("[CL] contacts:deleteContact sans user.phone_number")
     cb({ ok = false, error = "no_phone" })
@@ -293,8 +291,9 @@ CreateThread(function()
     end
 end)
 
-
+-- Reception du profil utilisateur depuis le serveur
 -- Le serveur renvoie les infos phone (ia-phone:set-user)
+-- PhoneNumber, nom, etc.
 RegisterNetEvent('ia-phone:set-user', function(user)
   gotUser = true
   user = user or {}

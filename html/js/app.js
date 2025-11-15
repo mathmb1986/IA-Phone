@@ -32,12 +32,31 @@
   var contactsSubtitle = document.getElementById('contactsSubtitle');
 
 
-    var btnAddContact = document.getElementById('btnAddContact');
-    var contactEditor = document.getElementById('contactEditor');
-    var contactNameInput = document.getElementById('contactNameInput');
-    var contactNumberInput = document.getElementById('contactNumberInput');
-    var btnContactSave = document.getElementById('btnContactSave');
-    var btnContactCancel = document.getElementById('btnContactCancel');
+  var btnAddContact = document.getElementById('btnAddContact');
+  var contactEditor = document.getElementById('contactEditor');
+  var contactNameInput = document.getElementById('contactNameInput');
+  var contactNumberInput = document.getElementById('contactNumberInput');
+  var btnContactSave = document.getElementById('btnContactSave');
+  var btnContactCancel = document.getElementById('btnContactCancel');
+
+
+  // --- Détails contact + suppression ---
+  var contactDetails             = document.getElementById('contactDetails');
+  var detailContactName          = document.getElementById('detailContactName');
+  var detailContactNumber        = document.getElementById('detailContactNumber');
+  var btnDelContact              = document.getElementById('btnDelContact');
+
+  // --- Fenêtre de confirmation de suppression ---
+  var contactDeleteConfirm       = document.getElementById('contactDeleteConfirm');
+  var contactDeleteText          = document.getElementById('contactDeleteText');
+  var btnCancelDeleteContact     = document.getElementById('btnCancelDeleteContact');
+  var btnConfirmDeleteContact    = document.getElementById('btnConfirmDeleteContact');
+
+  // État courant
+  var currentContactDetail       = null;   // contact actuellement affiché dans l'écran de détails
+  var pendingDeleteContactId     = null;   // id en attente de suppression
+
+
 
   // Debug & info
   var debugPanel       = document.getElementById('debugPanel');
@@ -54,7 +73,8 @@
     maxLines: 150
   };
 
-  function safeJSON(x) {
+  function safeJSON(x)
+  {
     try {
       return JSON.stringify(x);
     } catch (e) {
@@ -62,7 +82,8 @@
     }
   }
 
-  function dbg(msg, data, kind) {
+  function dbg(msg, data, kind)
+  {
     if (kind === void 0) kind = '';
 
     try {
@@ -104,7 +125,8 @@
     }
   }
 
-  function setDebugVisible(v) {
+  function setDebugVisible(v)
+  {
     if (!debugPanel) return;
     if (v) debugPanel.classList.add('show');
     else   debugPanel.classList.remove('show');
@@ -113,7 +135,8 @@
   setDebugVisible(Debug.enabled);
 
       // Toggle debug : F4
-      window.addEventListener('keydown', function (e) {
+      window.addEventListener('keydown', function (e)
+	  {
         if (e.key === 'F4') {
           Debug.enabled = !Debug.enabled;
           setDebugVisible(Debug.enabled);
@@ -309,13 +332,15 @@
         }
       }
 
-      function attachAppHandlers() {
+      function attachAppHandlers()
+	  {
         if (!appsGrid) return;
 
         var apps = $all('.app', appsGrid);
         dbg('ATTACH APP HANDLERS', { count: apps.length, supportsPointer: !!window.PointerEvent }, 'ok');
 
-        function makeHandlers(btn, id, icon) {
+        function makeHandlers(btn, id, icon)
+		{
           btn.__pressing = false;
 
           var pressStart = function () {
@@ -677,183 +702,334 @@
         }
       }
 
-      /* ============================================================
-       *                        CONTACTS
-       * ============================================================
-       */
+  /* ============================================================
+   *                        CONTACTS
+   * ============================================================
+   */
 
-    var contacts = [];
+  var contacts                = [];
+  var currentContactDetail    = null;  // contact actuellement affiché dans "Détails"
+  var pendingDeleteContactId  = null;  // id en attente de suppression
 
-      function openContactsApp() {
-          dbg('OPEN CONTACTS APP');
+  function openContactsApp() {
+    dbg('OPEN CONTACTS APP');
 
-        contactsList = document.getElementById('contactsList') || document.getElementById('msgThreads');
+    // S'assurer qu'on pointe sur le bon conteneur
+    contactsList = document.getElementById('contactsList') || contactsList;
 
-        if (homescreen) homescreen.classList.add('hidden');
-        if (screenMsgs) {
-          screenMsgs.hidden = true;
-          screenMsgs.classList.remove('active');
-        }
-        if (screenContacts) {
-          screenContacts.hidden = false;
-          screenContacts.classList.add('active');
-        }
+    // Masquer autres écrans
+    if (homescreen) homescreen.classList.add('hidden');
 
-        if (contactsEmpty) {
-          contactsEmpty.hidden = false;
-          contactsEmpty.textContent = 'Chargement des contacts…';
-        }
-        if (contactsList) contactsList.innerHTML = '';
+    if (screenMsgs) {
+      screenMsgs.hidden = true;
+      screenMsgs.classList.remove('active');
+    }
 
-        contacts = [];
+    if (contactDetails) {
+      contactDetails.hidden = true;
+      contactDetails.classList.remove('active');
+    }
 
-        if (!isNUI) {
-          // Mode démo
-          contacts = [
-            { id: 1, owner_number: '111-2358', contact_number: '571-8760', contact_name: 'Trixy Lee' },
-            { id: 2, owner_number: '111-2358', contact_number: '211-6889', contact_name: 'Dispatch' }
-          ];
-          renderContactsList();
-          return;
-        }
+    if (screenContacts) {
+      screenContacts.hidden = false;
+      screenContacts.classList.add('active');
+    }
 
-        callNui('contacts:getContacts', {}).then(function (res) {
-          if (res && res.contacts && res.contacts.length) {
-            contacts = res.contacts;
-          } else {
-            contacts = [];
-          }
-          dbg('RECV CONTACTS', { count: contacts.length }, 'ok');
-          renderContactsList();
-        }).catch(function (err) {
-          dbg('ERROR CONTACTS', { err: String(err) }, 'err');
+    // État "chargement"
+    if (contactsEmpty) {
+      contactsEmpty.hidden = false;
+      contactsEmpty.textContent = 'Chargement des contacts…';
+    }
+    if (contactsList) {
+      contactsList.innerHTML = '';
+    }
+
+    contacts = [];
+
+    // Mode démo (navigateur)
+    if (!isNUI) {
+      contacts = [
+        { id: 1, owner_number: '111-2358', contact_number: '571-8760', contact_name: 'Trixy Lee' },
+        { id: 2, owner_number: '111-2358', contact_number: '211-6889', contact_name: 'Dispatch' }
+      ];
+      renderContactsList();
+      return;
+    }
+
+    // Mode FiveM / NUI : récupérer depuis le client / serveur
+    callNui('contacts:getContacts', {})
+      .then(function (res) {
+        if (res && Array.isArray(res.contacts)) {
+          contacts = res.contacts;
+        } else {
           contacts = [];
-          renderContactsList();
+        }
+        dbg('RECV CONTACTS', { count: contacts.length }, 'ok');
+        renderContactsList();
+      })
+      .catch(function (err) {
+        dbg('ERROR CONTACTS', { err: String(err) }, 'err');
+        contacts = [];
+        renderContactsList();
+      });
+  }
+
+  function backFromContacts() {
+    dbg('BACK FROM CONTACTS');
+
+    if (screenContacts) {
+      screenContacts.hidden = true;
+      screenContacts.classList.remove('active');
+    }
+    if (contactDetails) {
+      contactDetails.hidden = true;
+      contactDetails.classList.remove('active');
+    }
+    if (homescreen) {
+      homescreen.classList.remove('hidden');
+    }
+  }
+
+  function showContactEditor(show) {
+    if (!contactEditor) return;
+    if (show) {
+      contactEditor.classList.remove('hidden');
+      if (contactNameInput)   contactNameInput.value = '';
+      if (contactNumberInput) contactNumberInput.value = '';
+      if (contactNameInput)   contactNameInput.focus();
+    } else {
+      contactEditor.classList.add('hidden');
+    }
+  }
+
+  function renderContactsList() {
+    if (!contactsList || !contactsEmpty) return;
+
+    if (!contacts || contacts.length === 0) {
+      contactsList.innerHTML = '';
+      contactsEmpty.hidden   = false;
+      contactsEmpty.textContent = 'Aucun contact.';
+      if (contactsSubtitle) contactsSubtitle.textContent = 'Aucun contact';
+      return;
+    }
+
+    contactsEmpty.hidden = true;
+    if (contactsSubtitle) {
+      contactsSubtitle.textContent = contacts.length + ' contact' + (contacts.length > 1 ? 's' : '');
+    }
+
+    var html = '';
+    for (var i = 0; i < contacts.length; i++) {
+      var c      = contacts[i];
+      var name   = c.contact_name || c.contact_number || 'Contact';
+      var number = c.contact_number || '';
+
+      html += '' +
+        '<button class="contact-item" data-id="' + String(c.id) + '" data-number="' + number + '">' +
+          '<div class="contact-avatar">' + ((name[0] || '?')) + '</div>' +
+          '<div class="contact-main">' +
+            '<div class="contact-name">' + name + '</div>' +
+            '<div class="contact-number">' + number + '</div>' +
+          '</div>' +
+        '</button>';
+    }
+
+    contactsList.innerHTML = html;
+
+    // Click sur un contact = ouvrir l'écran de détails
+    var items = $all('.contact-item', contactsList);
+    for (var j = 0; j < items.length; j++) {
+      (function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          handleContactClick(id);
+        });
+      })(items[j]);
+    }
+  }
+
+  function handleContactClick(contactId) {
+    dbg('CONTACT CLICK', { contactId: contactId });
+
+    if (!contactId) return;
+
+    // Trouver le contact complet
+    var contact = null;
+    for (var i = 0; i < contacts.length; i++) {
+      if (String(contacts[i].id) === String(contactId)) {
+        contact = contacts[i];
+        break;
+      }
+    }
+    if (!contact) {
+      dbg('CONTACT NOT FOUND', { contactId: contactId }, 'err');
+      return;
+    }
+
+    openContactDetails(contact);
+  }
+
+  /**
+   * Ouvre l'écran de détails pour un contact donné.
+   * @param {Object} contact - Contact tel que renvoyé par le serveur
+   */
+  function openContactDetails(contact) {
+    if (!contact) return;
+
+    currentContactDetail   = contact;
+    pendingDeleteContactId = null;
+
+    var name   = contact.contact_name || contact.contact_number || 'Contact';
+    var number = contact.contact_number || '';
+
+    if (detailContactName)   detailContactName.textContent   = name;
+    if (detailContactNumber) detailContactNumber.textContent = number;
+
+    // Masquer écran "liste"
+    if (screenContacts) {
+      screenContacts.hidden = true;
+      screenContacts.classList.remove('active');
+    }
+
+    // Afficher l'écran de détails
+    if (contactDetails) {
+      contactDetails.hidden = false;
+      contactDetails.classList.add('active');
+    }
+
+    // Bouton Message
+    var btnMsg = document.getElementById('btnMessageContact');
+    if (btnMsg) {
+      btnMsg.onclick = function () {
+        // On utilise le numéro comme identifiant de thread (même logique que ton ancienne version)
+        openThread(number);
+        if (contactDetails) {
+          contactDetails.hidden = true;
+          contactDetails.classList.remove('active');
+        }
+        if (screenMsgs) {
+          screenMsgs.hidden = false;
+          screenMsgs.classList.add('active');
+        }
+      };
+    }
+
+    // Bouton Appel
+    var btnCall = document.getElementById('btnCallContact');
+    if (btnCall) {
+      btnCall.onclick = function () {
+        dbg('CALL CONTACT', { contactNumber: number });
+        if (isNUI) {
+          callNui('contacts:callContact', { number: number });
+        } else {
+          alert('Appel vers : ' + number);
+        }
+      };
+    }
+  }
+
+  /**
+   * Ouvre la fenêtre de confirmation de suppression
+   * pour le contact actuellement dans currentContactDetail.
+   */
+  function openDeleteContactConfirm() {
+    if (!currentContactDetail || !contactDeleteConfirm) return;
+
+    pendingDeleteContactId = currentContactDetail.id;
+
+    var name = currentContactDetail.contact_name ||
+               currentContactDetail.contact_number ||
+               'ce contact';
+
+    if (contactDeleteText) {
+      contactDeleteText.textContent =
+        'Voulez-vous vraiment supprimer « ' + name + ' » ?';
+    }
+
+    contactDeleteConfirm.classList.remove('hidden');
+    contactDeleteConfirm.hidden = false;
+    contactDeleteConfirm.setAttribute('aria-hidden', 'false');
+  }
+
+  /**
+   * Ferme la fenêtre de confirmation de suppression.
+   */
+  function closeDeleteContactConfirm() {
+    pendingDeleteContactId = null;
+    if (!contactDeleteConfirm) return;
+
+    contactDeleteConfirm.classList.add('hidden');
+    contactDeleteConfirm.hidden = true;
+    contactDeleteConfirm.setAttribute('aria-hidden', 'true');
+  }
+
+  /**
+   * Confirme la suppression : appel NUI + mise à jour de la liste + retour à l'écran Contacts.
+   */
+  function confirmDeleteContact() {
+    if (!pendingDeleteContactId || !currentContactDetail) {
+      closeDeleteContactConfirm();
+      return;
+    }
+
+    var contactId = pendingDeleteContactId;
+    pendingDeleteContactId = null;
+
+    dbg('CONFIRM DELETE CONTACT', { id: contactId }, 'warn');
+
+    function afterDelete(newContacts) {
+      if (Array.isArray(newContacts)) {
+        contacts = newContacts;
+      } else {
+        // fallback local : on filtre simplement
+        contacts = contacts.filter(function (c) {
+          return String(c.id) !== String(contactId);
         });
       }
-        function showContactEditor(show) {
-            if (!contactEditor) return;
-            if (show) {
-                contactEditor.classList.remove('hidden');
-                if (contactNameInput) contactNameInput.focus();
-            } else {
-                contactEditor.classList.add('hidden');
-            }
-        }
 
-      function backFromContacts() {
-        dbg('BACK FROM CONTACTS');
+      renderContactsList();
 
-        if (screenContacts) {
-          screenContacts.hidden = true;
-          screenContacts.classList.remove('active');
-        }
-        if (homescreen) {
-          homescreen.classList.remove('hidden');
-        }
+      // Retour à la liste
+      if (contactDetails) {
+        contactDetails.hidden = true;
+        contactDetails.classList.remove('active');
+      }
+      if (screenContacts) {
+        screenContacts.hidden = false;
+        screenContacts.classList.add('active');
       }
 
-      function renderContactsList() {
-        if (!contactsList || !contactsEmpty) return;
-
-        if (!contacts || contacts.length === 0) {
-          contactsList.innerHTML = '';
-          contactsEmpty.hidden   = false;
-          contactsEmpty.textContent = 'Aucun contact.';
-          if (contactsSubtitle) contactsSubtitle.textContent = 'Aucun contact';
-          return;
-        }
-
-        contactsEmpty.hidden = true;
-        if (contactsSubtitle) {
-          contactsSubtitle.textContent = contacts.length + ' contact' + (contacts.length > 1 ? 's' : '');
-        }
-
-        var html = '';
-        var i;
-        for (i = 0; i < contacts.length; i++) {
-          var c      = contacts[i];
-          var name   = c.contact_name || c.contact_number || 'Contact';
-          var number = c.contact_number || '';
-
-          html += '' +
-            '<button class="contact-item" data-number="' + number + '">' +
-              '<div class="contact-avatar">' + ((name[0] || '?')) + '</div>' +
-              '<div class="contact-main">' +
-                '<div class="contact-name">' + name + '</div>' +
-                '<div class="contact-number">' + number + '</div>' +
-              '</div>' +
-            '</button>';
-        }
-
-        contactsList.innerHTML = html;
-
-        var items = $all('.contact-item', contactsList);
-        var j;
-        for (j = 0; j < items.length; j++) {
-          (function (btn) {
-            btn.addEventListener('click', function () {
-              var num = btn.getAttribute('data-number');
-              handleContactClick(num);
-            });
-          })(items[j]);
-        }
-      }
-
-    function handleContactClick(contactNumber) {
-        dbg('CONTACT CLICK', { contactNumber });
-
-        if (!contactNumber) return;
-
-        // Trouver le contact
-        var contact = contacts.find(c => c.contact_number === contactNumber);
-        if (!contact) return;
-
-        // Stocker temporairement dans l'interface
-        const nameEl = document.getElementById('detailContactName');
-        const numberEl = document.getElementById('detailContactNumber');
-        nameEl.textContent = contact.contact_name || contact.contact_number;
-        numberEl.textContent = contact.contact_number;
-
-        // Afficher le panneau de détails
-        if (screenContacts) {
-            screenContacts.hidden = true;
-            screenContacts.classList.remove('active');
-        }
-
-        const detailsScreen = document.getElementById('contactDetails');
-        if (detailsScreen) {
-            detailsScreen.hidden = false;
-            detailsScreen.classList.add('active');
-        }
-
-        // Bouton Message
-        const btnMsg = document.getElementById('btnMessageContact');
-        if (btnMsg) {
-            btnMsg.onclick = function () {
-                openThread(contact.contact_number);
-                detailsScreen.hidden = true;
-                detailsScreen.classList.remove('active');
-                screenMsgs.hidden = false;
-                screenMsgs.classList.add('active');
-            };
-        }
-
-        // Bouton Appel
-        const btnCall = document.getElementById('btnCallContact');
-        if (btnCall) {
-            btnCall.onclick = function () {
-                dbg('CALL CONTACT', { contactNumber });
-                if (isNUI) {
-                    callNui('contacts:callContact', {
-                        number: contact.contact_number
-                    });
-                } else {
-                    alert('Appel vers : ' + contact.contact_number);
-                }
-            };
-        }
+      currentContactDetail = null;
+      closeDeleteContactConfirm();
     }
+
+    // Mode démo : suppression locale uniquement
+    if (!isNUI) {
+      afterDelete();
+      return;
+    }
+
+    // Mode NUI : appel à la ressource Lua
+      callNui('contacts:deleteContact', { name: currentContactDetail.contact_name, number: currentContactDetail.contact_number })
+      .then(function (res) {
+          dbg('contacts:deleteContact RESULT', res || {}, 'ok');
+
+        if (res && Array.isArray(res.contacts)) {
+          afterDelete(res.contacts);
+        } else if (res && res.ok && Array.isArray(res.contacts)) {
+          afterDelete(res.contacts);
+        } else {
+          // Fallback : on recharge tout l'app Contacts
+          openContactsApp();
+          closeDeleteContactConfirm();
+        }
+      })
+      .catch(function (err) {
+        dbg('contacts:deleteContact ERROR', { err: String(err) }, 'err');
+        closeDeleteContactConfirm();
+      });
+
+  }
 
 
   /* ============================================================
@@ -861,7 +1037,8 @@
    * ============================================================
    */
 
-  window.addEventListener('message', function (e) {
+  window.addEventListener('message', function (e)
+  {
     var d = e.data || {};
     dbg('WINDOW MESSAGE', d);
 
@@ -888,133 +1065,125 @@
     }
   });
 
-    /* ============================================================
-    *                     UI BUTTONS / EVENTS
-    * ============================================================
-    */
-
-    if (btnClose) {
-    btnClose.addEventListener('click', function () {
-        callNui('close', {}).then(function () {
-        dbg('CLOSE SENT', {}, 'ok');
-        });
-    });
-    }
-
-    if (btnBackHome) {
-    btnBackHome.addEventListener('click', backToHomeFromMessages);
-    }
-
-    if (msgForm) {
-    msgForm.addEventListener('submit', handleSendMessage);
-    }
-
-    if (btnBackContacts) {
-    btnBackContacts.addEventListener('click', backFromContacts);
-    }
-
-	if (btnAddContact) {
-	  btnAddContact.addEventListener('click', function () {
-		if (contactNameInput)   contactNameInput.value = '';
-		if (contactNumberInput) contactNumberInput.value = '';
-		showContactEditor(true);
-	  });
-	}
-
-	if (btnContactCancel) {
-	  btnContactCancel.addEventListener('click', function () {
-		showContactEditor(false);
-	  });
-	}
-
-    if (contactEditor) {
-        contactEditor.addEventListener('submit', function (ev) {
-            ev.preventDefault();
-
-            var name = contactNameInput ? contactNameInput.value.trim() : '';
-            var number = contactNumberInput ? contactNumberInput.value.trim() : '';
-
-            if (!name || !number) {
-                dbg('ADD CONTACT invalid', { name: name, number: number }, 'warn');
-                return;
-            }
-
-            if (!isNUI) {
-                // Démo: ajoute localement
-                contacts.push({ id: Date.now(), owner_number: 'demo', contact_number: number, contact_name: name });
-                renderContactsList();
-                showContactEditor(false);
-                return;
-            }
-
-            // Appel NUI -> client.lua -> serveur -> DB
-            callNui('contacts:addContact', { name: name, number: number })
-                .then(function (res) {
-                    dbg('contacts:addContact RESULT', res || {}, 'ok');
-
-                    // ⚠️ Mise à jour immédiate si le callback renvoie la liste
-                    if (res && res.ok && Array.isArray(res.contacts)) {
-                        contacts = res.contacts;
-                        renderContactsList();
-                    }
-
-                    // Ferme le panneau (le push 'contacts:setContacts' reste supporté en fallback)
-                    showContactEditor(false);
-                })
-                .catch(function (err) {
-                    dbg('contacts:addContact ERROR', { err: String(err) }, 'err');
-                });
-        });
-    }
-
-
-
-   /* ============================================================
-   *                           Contacts
+  /* ============================================================
+   *                     UI BUTTONS / EVENTS
    * ============================================================
    */
 
-    if (btnAddContact) {
-        btnAddContact.addEventListener('click', function () {
-            // reset des champs
-            if (contactNameInput) contactNameInput.value = '';
-            if (contactNumberInput) contactNumberInput.value = '';
-            showContactEditor(true);
+  if (btnClose) {
+    btnClose.addEventListener('click', function () {
+      callNui('close', {}).then(function () {
+        dbg('CLOSE SENT', {}, 'ok');
+      });
+    });
+  }
+
+  if (btnBackHome) {
+    btnBackHome.addEventListener('click', backToHomeFromMessages);
+  }
+
+  if (msgForm) {
+    msgForm.addEventListener('submit', handleSendMessage);
+  }
+
+  if (btnBackContacts) {
+    btnBackContacts.addEventListener('click', backFromContacts);
+  }
+
+  // Bouton Retour dans l'écran de détails contact
+  var btnBackToContacts = document.getElementById('btnBackToContacts');
+  if (btnBackToContacts) {
+    btnBackToContacts.addEventListener('click', function () {
+      if (contactDetails) {
+        contactDetails.hidden = true;
+        contactDetails.classList.remove('active');
+      }
+      if (screenContacts) {
+        screenContacts.hidden = false;
+        screenContacts.classList.add('active');
+      }
+    });
+  }
+
+  // Ajout de contact (ouvre l’éditeur)
+  if (btnAddContact) {
+    btnAddContact.addEventListener('click', function () {
+      showContactEditor(true);
+    });
+  }
+
+  if (btnContactCancel) {
+    btnContactCancel.addEventListener('click', function () {
+      showContactEditor(false);
+    });
+  }
+
+  // Sauvegarde contact (formulaire)
+  if (contactEditor) {
+    contactEditor.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+
+      var name   = contactNameInput  ? contactNameInput.value.trim()   : '';
+      var number = contactNumberInput ? contactNumberInput.value.trim() : '';
+
+      if (!name || !number) {
+        dbg('ADD CONTACT invalid', { name: name, number: number }, 'warn');
+        return;
+      }
+
+      // Mode démo : ajout local simple
+      if (!isNUI) {
+        contacts.push({
+          id: Date.now(),
+          owner_number: 'demo',
+          contact_number: number,
+          contact_name: name
         });
-    }
+        renderContactsList();
+        showContactEditor(false);
+        return;
+      }
 
-    if (btnContactCancel) {
-        btnContactCancel.addEventListener('click', function () {
-            showContactEditor(false);
+      // Mode NUI : appel ressource
+      callNui('contacts:addContact', { name: name, number: number })
+        .then(function (res) {
+          dbg('contacts:addContact RESULT', res || {}, 'ok');
+
+          // Mise à jour immédiate si la ressource renvoie la liste
+          if (res && res.ok && Array.isArray(res.contacts)) {
+            contacts = res.contacts;
+            renderContactsList();
+          } else if (res && Array.isArray(res.contacts)) {
+            contacts = res.contacts;
+            renderContactsList();
+          }
+
+          showContactEditor(false);
+        })
+        .catch(function (err) {
+          dbg('contacts:addContact ERROR', { err: String(err) }, 'err');
         });
-    }
+    });
+  }
 
-    if (contactEditor && btnContactSave) {
-        contactEditor.addEventListener('submit', function (ev) {
-            ev.preventDefault();
-            // pour l'instant, on ne fait que fermer, on branchera le NUI plus tard
-            showContactEditor(false);
+  // === Events suppression contact (ouvre / ferme / confirme) ===
+  if (btnDelContact) {
+    btnDelContact.addEventListener('click', function () {
+      openDeleteContactConfirm();
+    });
+  }
 
-            // TODO : callNui('contacts:addContact', { name, number })
-            dbg("TODO : callNui('contacts: addContact", {  }, 'o');
-        });
-    }
+  if (btnCancelDeleteContact) {
+    btnCancelDeleteContact.addEventListener('click', function () {
+      closeDeleteContactConfirm();
+    });
+  }
 
-	const btnBackToContacts = document.getElementById('btnBackToContacts');
-	if (btnBackToContacts) {
-	btnBackToContacts.addEventListener('click', function () {
-		const detailsScreen = document.getElementById('contactDetails');
-		if (detailsScreen) {
-		detailsScreen.hidden = true;
-		detailsScreen.classList.remove('active');
-		}
-		if (screenContacts) {
-		screenContacts.hidden = false;
-		screenContacts.classList.add('active');
-		}
-	});
-    }
-
+  if (btnConfirmDeleteContact) {
+    btnConfirmDeleteContact.addEventListener('click', function () {
+      confirmDeleteContact();
+    });
+  }
 
 
   /* ============================================================
@@ -1047,15 +1216,5 @@
 
 })();
 
-
-function showContactEditor(show) {
-  if (!contactEditor) return;
-  if (show) {
-    contactEditor.classList.remove('hidden');
-    if (contactNameInput) contactNameInput.focus();
-  } else {
-    contactEditor.classList.add('hidden');
-  }
-}
 
 

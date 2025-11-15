@@ -142,28 +142,50 @@
                           <button type="button" id="btnContactCancel" class="btn-secondary">Annuler</button>
                           <button type="submit" id="btnContactSave" class="btn-primary">Enregistrer</button>
                       </div>
-                  </form>						
+                  </form>
               </div>
 
               <button id="btnAddContact" class="msg-add" title="Ajouter un contact">+</button>
           </div>
 
-			<!-- DÉTAILS D'UN CONTACT -->
-			<div id="contactDetails" class="screen-contact-details" hidden>
-			  <div class="msg-header">
-				<button id="btnBackToContacts" class="msg-back" aria-label="Retour">←</button>
-				<div class="msg-header-text">
-				  <div class="msg-title" id="detailContactName">Nom</div>
-				  <div class="msg-subtitle" id="detailContactNumber">Numéro</div>
-				</div>
-			  </div>
+          <!-- DÉTAILS D'UN CONTACT -->
+          <div id="contactDetails" class="screen-contact-details" hidden>
+              <div class="msg-header">
+                  <button id="btnBackToContacts" class="msg-back" aria-label="Retour">←</button>
+                  <div class="msg-header-text">
+                      <div class="msg-title" id="detailContactName">Nom</div>
+                      <div class="msg-subtitle" id="detailContactNumber">Numéro</div>
+                  </div>
+              </div>
               <div class="msg-body contact-details-actions">
                   <button class="btn-primary" id="btnMessageContact">Envoyer un message</button>
                   <button class="btn-secondary" id="btnCallContact">Appeler</button>
                   <button class="btn-tertiary" id="btnDelContact">Supprimer</button>
               </div>
-			</div>
+          </div>
 
+          <!-- Fenêtre de confirmation suppression contact -->
+          <div id="contactDeleteConfirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="contactDeleteTitle" aria-describedby="contactDeleteText" hidden>
+              <div class="modal-backdrop"></div>
+              <div class="modal-dialog">
+                  <div class="modal-header">
+                      <div id="contactDeleteTitle" class="modal-title">Supprimer ce contact ?</div>
+                  </div>
+                  <div class="modal-body">
+                      <p id="contactDeleteText">
+                          Voulez-vous vraiment supprimer ce contact ?
+                      </p>
+                  </div>
+                  <div class="modal-actions">
+                      <button type="button" id="btnCancelDeleteContact" class="btn-secondary">
+                          Annuler
+                      </button>
+                      <button type="button" id="btnConfirmDeleteContact" class="btn-danger">
+                          Supprimer
+                      </button>
+                  </div>
+              </div>
+          </div>
 
           <!-- Panneau DEBUG (toggle F4) -->
           <div id="debugPanel" class="debug"></div>

@@ -34,13 +34,12 @@ function Repo.GetFirstUserByName(userName, cb)
   )
 end
 
--- Si tu veux juste le num?ro (pour ?le phone ? John?)
+-- Si tu veux juste le numéro (pour le phone  John)
 function Repo.GetPhoneNumberByNameForCitizen(citizenid, userName, cb)
   Repo.GetUserByNameForCitizen(citizenid, userName, function(row)
     cb(row and row.phone_number or nil)
   end)
 end
-
 
 -- Cr?e le user (si absent) + assigne un num?ro unique ? CE citizenid seulement
 function Repo.EnsureUser(citizenid, defaultName, cb)

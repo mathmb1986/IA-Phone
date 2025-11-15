@@ -595,3 +595,73 @@ html,body{margin:0;padding:0;background:transparent;color:#eee;font-family:syste
   font-size: 14px;
   padding: 10px 16px;
 }
+
+
+
+
+
+/* === Modal générique === */
+.modal {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999; /* au-dessus des écrans */
+}
+
+    .modal.hidden {
+        display: none;
+    }
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.modal-dialog {
+    position: relative;
+    background: #111;
+    border-radius: 16px;
+    padding: 16px 18px;
+    width: 90%;
+    max-width: 280px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 14px;
+}
+
+.modal-header {
+    margin-bottom: 8px;
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.modal-body {
+    margin-bottom: 14px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Boutons (tu peux recycler tes styles existants) */
+.btn-danger {
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+    .btn-danger:active {
+        opacity: 0.85;
+    }
